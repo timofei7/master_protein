@@ -9,14 +9,12 @@
 #   file="@bc-30-sc-correct-20141022/bc-30-sc-correct-20141022/55/155c_A.pds" http://localhost:5000/api/master
 
 from flask import Flask, jsonify, request, render_template
-from werkzeug import secure_filename
-from search import *
+from MasterSearch import *
 
 app = Flask(__name__)
-MasterApp = masterapp()
+masterSearch = MasterSearch()
 
 # some config vars
-app.config['UPLOAD_FOLDER'] = 'uploads'
 ALLOWED_EXTENSIONS = frozenset(['pdb', 'pds'])
 ALLOWED_ARGS = frozenset(['bbRMSD', 'dEps', 'ddZScore',
     'matchInFile', 'matchOutFile', 'phiEps', 'psiEps',
@@ -66,12 +64,9 @@ def search():
     else:
         return jsonify({'error': 'no query file!'}), 201
 
-    print(request.form)
-    print(request.files)
+    results = masterSearch.process(query_file, request.form)
 
-    # masterapp.runMaster(content)
-
-    return jsonify({'succcess': 'hi'}), 201
+    return jsonify({'results': results}), 201
 
 
 if __name__ == "__main__":

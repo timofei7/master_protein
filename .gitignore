@@ -1,5 +1,9 @@
 bc-30-sc-correct-20141022
 external
+run
+.idea
+processing
+#no need to store project setting
 
 
 # default python gitignore follows:
