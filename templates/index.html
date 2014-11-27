@@ -1,0 +1,108 @@
+<div id="middleForApps">
+  <div id="windowForApps">
+    <div id="marginForApps">
+      <div id="centraltextcolumn">
+        <div id="maintext">
+
+
+          <div id="madcat-header">
+            <div id="master-title">
+              <center><img src="static/images/MASTER_logo_notext.jpg">
+                <br>
+              </center>
+              <center>
+                <u>M</u>ethod of <u>A</u>ccelerated <u>S</u>earch for <u>T</u>ertiary <u>E</u>nsemble <u>R</u>epresentatives
+              </center>
+            </div>
+          </div>
+          <br>
+
+          <h1>Getting MASTER</h1>
+          <p>
+            MASTER is written in C++, with the source code freely available to academic users under the terms of the GNU General Public License. Download the source code
+            <a href="../index.php?sec=download&amp;soft=MASTER">from here</a>. Inquiries about commercial licensing should be directed to Dr. Gevorg Grigoryan.
+          </p>
+
+          <h1>Reference</h1>
+          <p>If you use MASTER in your research, please cite the following paper:
+            <br>
+          </p>
+          <ul>
+            <li>
+              <p>Zhou J., Grigoryan G., "Rapid Search for Tertiary Fragments Reveals Protein Sequence-Structure Relationships", <i>Protein Science</i>, in press</p>
+            </li>
+          </ul>
+          <p></p>
+
+
+          <h1>Documentation</h1>
+
+          <h2>A quick usage guide</h2>
+          <p>To use MASTER you need a query and a database.
+            Both of these are created using the createPDS tool.
+            PDS stands for "Protein Data Structure" and, as the name suggests,
+            this tool takes as input a PDB structure and produces a file representing it
+            that will later be used as either a query or one of the database entries in a MASTER search.
+            Converting PDB files into PDS files enables MASTER to search
+            rapidly by representing the structure in a manner amenable to fast lookups (see Zhou and Grigoryan, ???).
+          </p>
+          <p>
+            Here are some example commands:
+          </p>
+
+          <pre>
+          createPDS --type query --pdb myQuery.pdb --pds myQuery.pds
+          createPDS --type target --pdb struct123.pdb --pds /my/database/str123.pds
+        </pre>
+          <p>
+            The first command prepares a query entry, myQuery.pds,
+            whereas the second command processes structure struct123.pdb
+            to be one of the database entries, placing it into some
+            appropriate location on the file system (/my/database/str123.pds).
+            The second command would be repeated for all structures making
+            up the database, with a list of all corresponding PDS files (i.e., their full paths)
+            compiled into a single list file to be used in searching.
+            Execute createPDS without any options to see the list
+            of all options many features are available,
+            including processing lists of files and breaking up large
+            PDB structures with internal redundancies (e.g., virus structures)
+            into their minimal units that preserve all unique chains and unique interfaces.
+            Once a query and a database (with its list file) are ready,
+            MASTER can be used to perform the search.
+          </p>
+          <p>
+            For example:
+          </p>
+          <pre>
+          master --query myQuery.pds --targetList database.list --rmsdCut 1.6 --bbRMSD --matchOutFile myQuery.match --seqOutFile myQuery.seq --structOut myQuery.struct/ --structOutType match
+        </pre>
+          <p>
+            This will search the database listed in database.list for all substructures
+            within 1.6 A CA RMSD of the query in myQuery.pds.
+            Note that the query may have one or more disjoint segments.
+            Information on the matches (i.e., which database entry they come
+            from and what indices each disjoint segment in the query maps to)
+            is output into myQuery.match, one match per line. Sequences of the
+            matching regions, in the order of residues in the query, are output
+            into myQuery.seq, one match per line.
+            CA and full-backbone RMSDs of each match are also listed in this
+            file in the first two columns, respectively
+            (the latter because --bbRMSD was specified).
+            Finally, structures of matching regions are written
+            into myQuery.struct/ directory, one file per match
+            (full matches can also be output).
+            Execute master by itself for the full list of options.
+          </p>
+
+
+
+          </p>
+          <br>
+
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
