@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 # flask app for master
 #
-# takes a json post like so:
-# curl -i -H "Content-Type: application/json" -X POST
-#   -d '{"words":["worchestershire", "nouveau", "paraguayo"]}' http://localhost:5000/syllables
-# actually just takes multipart form data like so:
-# curl -F query="hiii this is a test" -F
-#   file="@bc-30-sc-correct-20141022/bc-30-sc-correct-20141022/55/155c_A.pds" http://localhost:5000/api/master
+# takes a post like so:
+# curl -F query="hiii this is a test" -F query_file=@"bc-30-sc-correct-20141022/ad/1adu_A.pds" http://localhost:5000/api/search
 
 from flask import Flask, jsonify, request, render_template
+from flask import redirect, url_for, send_from_directory
 from MasterSearch import *
 
 app = Flask(__name__)
@@ -65,8 +62,16 @@ def search():
         return jsonify({'error': 'no query file!'}), 201
 
     results = masterSearch.process(query_file, request.form)
-
     return jsonify({'results': results}), 201
+    # return redirect(url_for('uploaded_file',
+    #                         filename=filename))
+
+# an image, that image is going to be show after the upload
+@app.route('/api/search/<filename>')
+def processed_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               filename)
+
 
 
 if __name__ == "__main__":

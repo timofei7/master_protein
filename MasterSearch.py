@@ -12,7 +12,7 @@ createPDS_path = os.path.join(baseDir, 'external/master/createPDS')
 extractPDB_path = os.path.join(baseDir, 'external/master/extractPDB')
 processing_path = os.path.join(baseDir, 'processing')
 library_path = os.path.join(baseDir, 'bc-30-sc-correct-20141022')
-target_list_path = os.path.join(library_path, 'list')
+target_list_path = os.path.join(library_path, 'ram_list')
 
 defaults = {
     'rmsdCut': '1.5',
@@ -23,10 +23,11 @@ defaults = {
 class MasterSearch(object):
 
     def __init__(self):
-        # could do things like load the database into ram here
-        # thats why this is a class, for now do nothing
+        # could do things like load the database into memory or setup caching etc
+        # for now do nothing
         pass
 
+    # process the query
     def process(self, query_file, arguments):
         results = None
         tempdir = tempfile.mkdtemp(dir=processing_path)
@@ -73,6 +74,7 @@ class MasterSearch(object):
         rmsd_cut = options['rmsdCut'] if 'rmsdCut' in options else defaults['rmsdCut']
         top_n = options['topN'] if 'topN' in options else defaults['topN']
         try:
+            devnull = open('/dev/null', 'w')
             cmd = [master_path,
                    '--query', query_filepath,
                    '--targetList', target_list_path,
@@ -81,13 +83,13 @@ class MasterSearch(object):
                    '--seqOutFile', seq_out,
                    '--topN', top_n,
                    '--structOut', struct_out]
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+            p = subprocess.Popen(cmd, stdout=devnull,
                                  stderr=subprocess.PIPE,
                                  stdin=subprocess.PIPE)
             out, err = p.communicate()
-            print('out: ' + out)
-            if re.match('Error:', out):
-                err += out
+            #print('out: ' + out)
+            #if re.match('Error:', out):
+            #    err += out
             # check for error
             if err:
                 raise Exception(err)
