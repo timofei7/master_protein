@@ -1,35 +1,29 @@
 #!/usr/bin/env python
 # flask app for master
 #
-# takes a post like so:
-# curl -F query="hiii this is a test" -F query_file=@"bc-30-sc-correct-20141022/ad/1adu_A.pds" http://localhost:5000/api/search
 
 from flask import Flask, jsonify, request, render_template
 from flask import redirect, url_for, send_from_directory
 from MasterSearch import *
+import Tasks
 
 app = Flask(__name__)
-masterSearch = MasterSearch()
-
-# some config vars
-ALLOWED_EXTENSIONS = frozenset(['pdb', 'pds'])
-ALLOWED_ARGS = frozenset(['bbRMSD', 'dEps', 'ddZScore',
-    'matchInFile', 'matchOutFile', 'phiEps', 'psiEps',
-    'query', 'rmsdCut', 'rmsdMode', 'seqOutFile', 'structOut',
-    'structOutType', 'target', 'targetList', 'topN', 'tune'])
+app.config.from_object('Settings.Default')
+celery = Tasks.make_celery(app)
+masterSearch = MasterSearch(app)
 
 
 def allowed_file(filename):
     return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
+           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
 
 
 def allowed_args(list_of_args):
     # checks if list is allowed
     # returns: (bool isAllowed, listOfNotAllowed)
     argset = set(list_of_args)
-    issubset = argset <= ALLOWED_ARGS
-    intersection = argset - ALLOWED_ARGS
+    issubset = argset <= app.config['ALLOWED_ARGS']
+    intersection = argset - app.config['ALLOWED_ARGS']
     return issubset, intersection
 
 # routes
@@ -62,7 +56,8 @@ def search():
         return jsonify({'error': 'no query file!'}), 201
 
     results = masterSearch.process(query_file, request.form)
-    return jsonify({'results': results}), 201
+
+    return jsonify({'progress': '1', 'results': results}), 201
     # return redirect(url_for('uploaded_file',
     #                         filename=filename))
 
@@ -75,5 +70,4 @@ def processed_file(filename):
 
 
 if __name__ == "__main__":
-  app.run(debug=True)
-  #app.run()
+    app.run(debug=True)
