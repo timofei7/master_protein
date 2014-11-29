@@ -1,9 +1,9 @@
 this is a  server using flask
 
 preqeruisites:
-   brew install rabbitmq
+   brew install redis 
    pip install flask
-   pip install celery
+   pip install rq
 
 to run it on http://localhost simply do:
    ./run 

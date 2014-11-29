@@ -1,12 +1,12 @@
 #!/usr/bin/env python
+"""
+Put settings here for various files necessary
+"""
 
 import os
 
 
 class Default(object):
-
-    CELERY_BROKER_URL = 'amqp://guest@127.0.0.1//'
-    CELERY_BACKEND = 'amqp'
 
     ALLOWED_EXTENSIONS = frozenset(['pdb', 'pds'])
     ALLOWED_ARGS = frozenset(['bbRMSD', 'dEps', 'ddZScore',

@@ -1,14 +1,16 @@
 #!/usr/bin/env python
+"""
+the main master search functionality
+"""
 
 import os
-import re
-import sys
 import tempfile
 import subprocess
-import shutil
 from werkzeug import secure_filename
-from celery import current_app
+from rq import Queue
+from redis import Redis
 import Tasks
+
 
 defaults = {
     'rmsdCut': '1.5',
@@ -18,13 +20,15 @@ defaults = {
 
 class MasterSearch(object):
 
-    db_size = 0
     app = None
+    db_size = 0
 
     def __init__(self, app):
         # could do things like load the database into memory or setup caching etc
         self.db_size = sum(1 for line in open(app.config['TARGET_LIST_PATH']) if line.rstrip())
         self.app = app
+        self.redis_conn = Redis()
+        self.rq = Queue(connection=self.redis_conn)
         print('init with db size: ' + str(self.db_size))
 
         # process the query
@@ -36,7 +40,7 @@ class MasterSearch(object):
             # save file
             query_file.save(query_filepath)
             pdsfile = self.pdb2pds(query_filepath)
-            results = self.search(pdsfile)
+            search_job = self.qsearch(pdsfile)
 
         except Exception as e:
             print("processing failed: " + e.message)
@@ -44,29 +48,32 @@ class MasterSearch(object):
         # cleanup all files
         # shutil.rmtree(tempdir, ignore_errors=True)
         # TODO: need to clean up the above somewhere later
-        return results
+        return search_job, tempdir
 
     # convert pdb to pds format
     def pdb2pds(self, pdbfilepath):
         # if already a pds do nothing
-        if os.path.splitext(pdbfilepath)[1] == 'pds':
+        ext = os.path.splitext(pdbfilepath)[1]
+        if ext == '.pds' or ext == 'pds':
             return pdbfilepath
 
         pdsfilename = pdbfilepath.replace('.pdb', '.pds')
         try:
             cmd = [self.app.config['CREATEPDS_PATH'], '--type', 'query', '--pdb', pdbfilepath, '--pds', pdsfilename]
-            p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    stdin=subprocess.PIPE)
+            p = subprocess.Popen(cmd,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 stdin=subprocess.PIPE)
             out, err = p.communicate()
             # check for error
-            assert(not err)
+            if err:
+                raise Exception(err)
             return pdsfilename
         except Exception as e:
             raise Exception("couldn't convert file from pdb2pds: " + e.message)
 
     # perform the search
-    def search(self, query_filepath, options={}):
+    def qsearch(self, query_filepath, options={}):
 
         tempdir, qfile = os.path.split(query_filepath)
         prefix, ext = os.path.splitext(qfile)
@@ -85,7 +92,9 @@ class MasterSearch(object):
                '--topN', top_n,
                '--structOut', struct_out]
 
-        result = Tasks.search.delay(cmd, tempdir, self.db_size)
-        result.wait()
+        job = self.rq.enqueue(Tasks.search, cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size)
 
-        return ""
+        return job
+
+if __name__ == "__main__":
+    pass

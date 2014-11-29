@@ -1,0 +1,10 @@
+#!/bin/bash
+#
+# loop in case it ever dies when in debug mode
+# don't use this in production!
+
+mkdir processing 2>&1 >/dev/null
+
+rqworker --pid /tmp/rqworker.pid &
+while `true`; do ./MasterApp.py; sleep 3; done
+kill `cat /tmp/rqworker.pid`
