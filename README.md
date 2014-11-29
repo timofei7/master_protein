@@ -1,12 +1,25 @@
-this is a  server using flask
+![logo](static/images/MASTER_logo_notext.jpg)
+##this is a server for MASTER##
+Method of Accelerated Search for Tertiary Ensemble Representatives
 
-preqeruisites:
-   brew install redis 
-   pip install flask
-   pip install rq
+###prerequisites:###
+on osx just install:
 
-to run it on http://localhost simply do:
-   ./run 
+  - `brew install redis` 
+  - `pip install flask`
+  - `pip install rq`
+  - install master and msl in the `external` directory
+  - download your pdb library
+  - edit the Settings.py file to match your paths
 
-test files in:  testing
-    testing/test.py
+###run it:###
+to run a local server on http://localhost simply do:
+
+  - `./run` 
+
+###test scripts###
+
+test files in: `testing`
+
+  - `testing/test.py`
+
