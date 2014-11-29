@@ -5,7 +5,9 @@ Method of Accelerated Search for Tertiary Ensemble Representatives
 ###prerequisites:###
 on osx just install:
 
-  - `brew install redis` 
+  - `brew install redis`
+  - start redis:
+    - `redis-server /usr/local/etc/redis.conf`
   - `pip install flask`
   - `pip install rq`
   - install master and msl in the `external` directory

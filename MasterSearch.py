@@ -6,7 +6,7 @@ the main master search functionality
 import os
 import tempfile
 import subprocess
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 from rq import Queue
 from redis import Redis
 import Tasks
@@ -14,7 +14,15 @@ import Tasks
 
 defaults = {
     'rmsdCut': '1.5',
-    'topN': '25'
+    'topN': '25',
+    'structOutType': 'match',
+    'bbRMSD':  False,
+    'rmsdMode': '0',
+    'tune': '0.5',
+    'dEps': False,
+    'phiEps': '180.0',
+    'psiEps': '180.0',
+    'ddZScore': '3.5'
 }
 
 
@@ -31,19 +39,18 @@ class MasterSearch(object):
         self.rq = Queue(connection=self.redis_conn)
         print('init with db size: ' + str(self.db_size))
 
-        # process the query
+    # process the query
     def process(self, query_file, arguments):
-        results = None
+        search_job = None
         tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])
         query_filepath = os.path.join(tempdir, secure_filename(query_file.filename))
         try:
             # save file
             query_file.save(query_filepath)
             pdsfile = self.pdb2pds(query_filepath)
-            search_job = self.qsearch(pdsfile)
-
+            search_job = self.qsearch(pdsfile, arguments)
         except Exception as e:
-            print("processing failed: " + e.message)
+            print("processing failed: " + str(e))
 
         # cleanup all files
         # shutil.rmtree(tempdir, ignore_errors=True)
@@ -73,15 +80,16 @@ class MasterSearch(object):
             raise Exception("couldn't convert file from pdb2pds: " + e.message)
 
     # perform the search
-    def qsearch(self, query_filepath, options={}):
+    def qsearch(self, query_filepath, arguments):
 
+        # required arguments
         tempdir, qfile = os.path.split(query_filepath)
         prefix, ext = os.path.splitext(qfile)
         match_out = os.path.join(tempdir, prefix+'.match')
         seq_out = os.path.join(tempdir, prefix+'.seq')
         struct_out = os.path.join(tempdir, prefix+'.struct')
-        rmsd_cut = options['rmsdCut'] if 'rmsdCut' in options else defaults['rmsdCut']
-        top_n = options['topN'] if 'topN' in options else defaults['topN']
+        rmsd_cut = arguments['rmsdCut'] if 'rmsdCut' in arguments else defaults['rmsdCut']
+        top_n = arguments['topN'] if 'topN' in arguments else defaults['topN']
 
         cmd = [self.app.config['MASTER_PATH'],
                '--query', query_filepath,
@@ -91,6 +99,15 @@ class MasterSearch(object):
                '--seqOutFile', seq_out,
                '--topN', top_n,
                '--structOut', struct_out]
+
+        # add in optional provided arguments
+        print("OPTIONS" + str(arguments))
+        for k, v in arguments.iteritems():
+            if k == 'bbRMSD' or k == 'dEps':
+                cmd.append('--'+k)
+            else:
+                cmd.append('--'+k)
+                cmd.append(v)
 
         job = self.rq.enqueue(Tasks.search, cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size)
 

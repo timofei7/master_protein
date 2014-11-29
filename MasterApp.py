@@ -38,9 +38,11 @@ def search():
     if not is_allowed:
         return jsonify({'error': 'bad parameters: ' + ', '.join(not_allowed_list)})
 
+    sanitized = Checks.sanitize_args(request.form)
+
     # check query file
-    if len(request.files) == 1 and 'query_file' in request.files:
-        query_file = request.files['query_file']
+    if len(request.files) == 1 and 'query' in request.files:
+        query_file = request.files['query']
         if Checks.allowed_file(query_file.filename):
             print("found query_file: " + str(query_file))
         else:
@@ -49,7 +51,7 @@ def search():
         return jsonify({'error': 'no query file!'}), 201
 
     # start processing the query and give us some progress
-    search_job, tempdir = masterSearch.process(query_file, request.form)
+    search_job, tempdir = masterSearch.process(query_file, sanitized)
     progressfile = os.path.join(tempdir, 'progress')
 
     # generator to provide updates and status to client

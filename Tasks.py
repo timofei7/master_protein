@@ -5,7 +5,6 @@
 
 
 import os, re, subprocess, sys
-from rq import get_current_job
 
 
 # perform the search
@@ -60,4 +59,4 @@ def search(cmd, basedir, tempdir, db_size):
 
     # return the fileid once all done processing
     return fileid
-    # TODO: handle errors how?
+    # TODO: handle errors better here
