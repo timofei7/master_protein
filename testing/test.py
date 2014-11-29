@@ -36,7 +36,7 @@ conn.setopt(pycurl.MAXREDIRS, 5)
 conn.setopt(pycurl.POST, 1)
 data = [
     ("query", "just a test string"),
-    ("query_file", (pycurl.FORM_FILE, "sele.pds"))
+    ("query_file", (pycurl.FORM_FILE, "sele.pdb"))
 ]
 conn.setopt(pycurl.HTTPPOST, data)
 
