@@ -85,9 +85,9 @@ class MasterSearch(object):
         # required arguments
         tempdir, qfile = os.path.split(query_filepath)
         prefix, ext = os.path.splitext(qfile)
-        match_out = os.path.join(tempdir, prefix+'.match')
-        seq_out = os.path.join(tempdir, prefix+'.seq')
-        struct_out = os.path.join(tempdir, prefix+'.struct')
+        match_out = os.path.join(tempdir, 'matches')
+        seq_out = os.path.join(tempdir, 'seq')
+        struct_out = os.path.join(tempdir, 'struct')
         rmsd_cut = arguments['rmsdCut'] if 'rmsdCut' in arguments else defaults['rmsdCut']
         top_n = arguments['topN'] if 'topN' in arguments else defaults['topN']
 

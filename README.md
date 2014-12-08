@@ -10,6 +10,7 @@ on osx just install:
     - `redis-server /usr/local/etc/redis.conf`
   - `pip install flask`
   - `pip install rq`
+  - `pip install gunicorn`
   - install master and msl in the `external` directory
   - download your pdb library
   - edit the Settings.py file to match your paths

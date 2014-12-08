@@ -10,6 +10,8 @@ from flask import redirect, url_for, send_from_directory
 from flask import Response
 import json, time
 from MasterSearch import *
+import zlib
+import base64
 
 # set up the flask app
 app = Flask(__name__)
@@ -59,11 +61,25 @@ def search():
         while search_job.get_status() != 'finished':
             time.sleep(1)
             if search_job.is_failed:
-                yield json.dumps({'error': 'bad'})
+                yield json.dumps({'error': 'failed'})
             elif search_job.get_status() != 'finished':  # keep sending progress update
-                yield json.dumps({'progress': open(progressfile, 'r').readline()})
+                try:
+                    yield json.dumps({'progress': open(progressfile, 'r').readline()})
+                except Exception as e:
+                    yield json.dumps({'error': e.message})
             else:
-                yield json.dumps({'results': search_job.result, 'message': 'will be available for 24 hours'})
+                matches = []
+                structdir = os.path.join(tempdir, "struct")
+                for f in os.listdir(structdir):
+                    if f.endswith(".pdb"):
+                        filepath = os.path.join(structdir, f)
+                        str_file = str(open(filepath).read())
+                        compressed_file = zlib.compress(str_file, 5)
+                        encoded_file = base64.standard_b64encode(compressed_file)
+                        matches.append(encoded_file)
+                yield json.dumps({'results': search_job.result,
+                                  'message': 'will be available for 24 hours',
+                                  'matches': matches})
                 # TODO: implement cleaning up files
 
     return Response(generate(),  mimetype='application/json')
@@ -76,4 +92,4 @@ def processed_file(filename):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)
