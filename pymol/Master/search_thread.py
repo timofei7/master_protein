@@ -1,23 +1,10 @@
 
-from pymol.wizard import Wizard
-from pymol import cmd
 import threading
 import json
-import socket
-import tkSimpleDialog
-import tkMessageBox
-import sys
-import pymol
 from Tkinter import *
-
-import tkSimpleDialog
-import tkMessageBox
-import sys
-import urllib2
 import zlib
 import pycurl
 import base64
-import subprocess
 from StringIO import StringIO
 import traceback
 
@@ -45,62 +32,31 @@ class SearchThread(threading.Thread):
         self.url = url  # Currently selected host
         self.match_id = ''
         self.conn = None
+        self.error = None
 
         self.concurrency_management = {'begun': False,  # True once the thread begins consuming
                                        'ended': False,  # True once the thread finishes consuming
                                        'lock': threading.Lock()}  # This guards the 'begun' and 'end' variables
-
-        # def remote(pdb_code):
-#     pdb_code = pdb_code.upper()
-#     try:
-#         pdbFile = urllib2.urlopen('http://www.rcsb.org/pdb/cgi/export.cgi/' +
-#                                   pdb_code + '.pdb.gz?format=PDB&pdbId=' +
-#                                   pdb_code + '&compression=gz')
-#         cmd.read_pdbstr(zlib.decompress(pdbFile.read()[22:], -zlib.MAX_WBITS), pdb_code)
-#     except Exception as e:
-#         print "Unexpected error:", e.message
-#         tkMessageBox.showerror('Invalid Code',
-#                                'You entered an invalid pdb code:' + pdb_code)
-
 
     # callback for processing data
     def on_receive(self, streamdata):
         try:
             jsondata = json.loads(streamdata)
             if 'progress' in jsondata:
-                print('progress: ' + jsondata['progress'].strip())
+                progs = jsondata['progress'].strip()
+                print('progress: ' + progs)
+            elif 'error' in jsondata:
+                raise Exception(jsondata['error'])
             else:
                 self.databuffer.write(streamdata.strip())
-                # we just append cause this could be multiple packets
-            # if 'results' in jsondata:
-            #     self.match_id = jsondata['results'].strip()
-            #     if 'matches' in jsondata:
-            #         for index, match in enumerate(jsondata['matches']):
-            #             unencoded = base64.decodestring(match)
-            #             uncompressed = zlib.decompress(unencoded)
-            #             print('decoded file header: ' + uncompressed.splitlines()[0])
-            #             matches.append(uncompressed)
-            #             self.cmd.read_pdbstr(str(uncompressed), self.match_id)  # +"_"+index)
-            #             # self.pdbs[pdbid] += 1
-            #     # print('results: ' + json.dumps(jsondata['results'], sort_keys=True, indent=4))
-            #     # print('initiating download...')
-            #     # self.download(fileid)
+                # append to databuffer cause sometimes packets for results span multiple calls
         except ValueError:
             self.databuffer.write(streamdata.strip())
             # for valueerror we just append cause this could be multiple packets
         except Exception as e:
-            print('error processing response: ' + e.message + "\nrawdata: " + str(streamdata))
-
-        # # If there is an existing result of the same name, delete it,
-        # # otherwise PyMOL will load the new result as an additional
-        # # model to the existing result.
-        # self.cmd.delete(self.match_id)
-        #
-        # # Load the structure into pymol.
-        # self.cmd.read_pdbstr(body[5:], sele_name)
-        # curr_group_name = self.group_name + '_' + RESULT_SUFFIX
-        # self.cmd.group(curr_group_name, sele_name)
-        # self.cmd.group(self.group_name, curr_group_name)        #
+            # stop on error
+            self.error = 'error processing response: ' + e.message
+            return -1  # will trigger a close
 
     # Send a search request and await results
     def run(self):
@@ -116,31 +72,14 @@ class SearchThread(threading.Thread):
             finally:
                 self.concurrency_management['lock'].release()
 
-            # import StringIO
-            # import uu
-            #
-            # def uu2string(data, mode=None):
-            #     outfile = StringIO.StringIO()
-            # infile = StringIO.StringIO(data)
-            # uu.decode(infile, outfile, mode)
-            # return outfile.getvalue()
-
-            # contents = 'hello, world!'
-            #    send = [
-            #        ('field2', (pycurl.FORM_BUFFER, 'uploaded.file', pycurl.FORM_BUFFERPTR, contents)),
-            #    ]
-            # make connection
-
             self.conn = pycurl.Curl()
             self.conn.setopt(pycurl.URL, self.url)
             self.conn.setopt(pycurl.FOLLOWLOCATION, 1)
             self.conn.setopt(pycurl.MAXREDIRS, 5)
             self.conn.setopt(pycurl.POST, 1)
-
-            #             ziped = sio()
-            # with gzip.GzipFile(fileobj=ziped, mode='w') as f:
-            #     f.write(xml_content)
-            # run_data = ziped.getvalue()
+            self.conn.setopt(pycurl.CONNECTTIMEOUT, 1200)
+            self.conn.setopt(pycurl.TIMEOUT, 1200)
+            self.conn.setopt(pycurl.NOSIGNAL, 1)
 
             print("pdbs: " + str(self.query))
 
@@ -154,26 +93,33 @@ class SearchThread(threading.Thread):
             self.conn.setopt(pycurl.WRITEFUNCTION, self.on_receive)
             self.conn.perform()
 
-            #  now we parse our databuffer
-            # once we're done check the stringbuffer for the complete json matches
-            try:
-                jsondata = json.loads(self.databuffer.getvalue())
-                if 'results' in jsondata:
-                    self.match_id = jsondata['results'].strip()
-                    if 'matches' in jsondata:
-                        for index, match in enumerate(jsondata['matches']):
-                            unencoded = base64.standard_b64decode(match)
-                            uncompressed = zlib.decompress(unencoded)
-                            print('decoded file header: ' + uncompressed.splitlines()[0])
-                            self.cmd.read_pdbstr(str(uncompressed), self.match_id)  # +"_"+index)
-                            # self.pdbs[pdbid] += 1
-            except Exception as e:
-                print('error processing response: ' + e.message + "\nrawdata: " + str(self.databuffer.getvalue()))
-                print(traceback.format_exc())
+            if not self.error:
+                # now we parse our databuffer
+                # once we're done check the stringbuffer for the complete json matches
+                try:
+                    jsondata = json.loads(self.databuffer.getvalue())
+                    if 'results' in jsondata:
+                        self.match_id = jsondata['results'].strip()
+                        if 'matches' in jsondata:
+                            for index, match in enumerate(jsondata['matches']):
+                                unencoded = base64.standard_b64decode(match)
+                                uncompressed = zlib.decompress(unencoded)
+                                header = uncompressed.splitlines()[0]
+                                phid = re.search('/(.*?).pds', header).group(1).split('/')
+                                hid = phid[len(phid)-1] + '.' + str(index)
+                                print('decoded file header: ' + header)
+                                self.cmd.read_pdbstr(str(uncompressed), hid)
+                                self.cmd.group(self.match_id, hid)
 
+                except Exception as e:
+                    print('error processing response: ' + e.message + "\nrawdata: " + str(self.databuffer.getvalue()))
+                    print(traceback.format_exc())
         except Exception as e:
-            print("Trouble posting request: " + e.message)
-            print(traceback.format_exc())
+            # check for self.error as that would contain certain types of errors that weren't exceptions
+            if self.error:
+                print("Trouble posting request: " + self.error)
+            else:
+                print("Trouble posting request: " + e.message)
 
         finally:
             # once done set ended atomically

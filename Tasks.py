@@ -4,7 +4,10 @@
 """
 
 
-import os, re, subprocess, sys
+import os
+import re
+import subprocess
+import sys
 
 
 # perform the search
@@ -43,9 +46,6 @@ def search(cmd, basedir, tempdir, db_size):
             out.append(sline)
         sys.stdout.flush()
     err += process.stderr.readlines()  # append any stderr to stdout "Errors"
-    if err:
-        str_err = "\n".join(err)
-        raise Exception(str_err)
 
     # compress the resultsdir
     compress_cmd = ['/usr/bin/tar', '-C', basedir, '-czf', os.path.join(basedir, tarname), fileid]
@@ -55,8 +55,11 @@ def search(cmd, basedir, tempdir, db_size):
                                         stdin=subprocess.PIPE)
     c_out, c_err = compress_process.communicate()
     if c_err and not re.search('Removing', c_err):
-        raise Exception(str(c_err))
+        err.append(str(c_err))
 
     # return the fileid once all done processing
-    return fileid
+    if err:
+        return 'ERROR: ' + ','.join(err)
+    else:
+        return fileid
     # TODO: handle errors better here

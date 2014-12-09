@@ -10,6 +10,7 @@ from werkzeug.utils import secure_filename
 from rq import Queue
 from redis import Redis
 import Tasks
+import re
 
 
 defaults = {
@@ -41,6 +42,7 @@ class MasterSearch(object):
 
     # process the query
     def process(self, query_file, arguments):
+        error = None
         search_job = None
         tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])
         query_filepath = os.path.join(tempdir, secure_filename(query_file.filename))
@@ -50,12 +52,13 @@ class MasterSearch(object):
             pdsfile = self.pdb2pds(query_filepath)
             search_job = self.qsearch(pdsfile, arguments)
         except Exception as e:
-            print("processing failed: " + str(e))
+            print("processing failed: " + e.message)
+            error = e.message
 
         # cleanup all files
         # shutil.rmtree(tempdir, ignore_errors=True)
         # TODO: need to clean up the above somewhere later
-        return search_job, tempdir
+        return search_job, tempdir, error
 
     # convert pdb to pds format
     def pdb2pds(self, pdbfilepath):
@@ -67,12 +70,16 @@ class MasterSearch(object):
         pdsfilename = pdbfilepath.replace('.pdb', '.pds')
         try:
             cmd = [self.app.config['CREATEPDS_PATH'], '--type', 'query', '--pdb', pdbfilepath, '--pds', pdsfilename]
+            print("attempting to convert: " + ' '.join(cmd))
             p = subprocess.Popen(cmd,
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE,
                                  stdin=subprocess.PIPE)
             out, err = p.communicate()
             # check for error
+            if re.search('Error:', out):
+                # might not return -1 so check for text here
+                err += out
             if err:
                 raise Exception(err)
             return pdsfilename

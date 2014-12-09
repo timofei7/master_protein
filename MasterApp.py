@@ -12,6 +12,7 @@ import json, time
 from MasterSearch import *
 import zlib
 import base64
+import re
 
 # set up the flask app
 app = Flask(__name__)
@@ -53,7 +54,11 @@ def search():
         return jsonify({'error': 'no query file!'}), 201
 
     # start processing the query and give us some progress
-    search_job, tempdir = masterSearch.process(query_file, sanitized)
+
+    search_job, tempdir, error = masterSearch.process(query_file, sanitized)
+    if error:
+        return jsonify({'error': error}), 201
+
     progressfile = os.path.join(tempdir, 'progress')
 
     # generator to provide updates and status to client
@@ -68,6 +73,9 @@ def search():
                 except Exception as e:
                     yield json.dumps({'error': e.message})
             else:
+                if re.search('ERROR', search_job.return_value):
+                    yield json.dumps({'error': search_job.return_value.replace("ERROR:", "")})
+
                 matches = []
                 structdir = os.path.join(tempdir, "struct")
                 for f in os.listdir(structdir):

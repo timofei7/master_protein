@@ -4,22 +4,6 @@
 #
 from pymol.wizard import Wizard
 from pymol import cmd
-import threading
-import json
-import socket
-import tkSimpleDialog
-import tkMessageBox
-import sys
-import pymol
-from Tkinter import *
-
-import tkSimpleDialog
-import tkMessageBox
-import sys
-import urllib2
-import zlib
-import pycurl
-import subprocess
 from search_thread import *
 
 URL = "http://127.0.0.1:5000/api/search"
@@ -39,15 +23,8 @@ class MasterSearch(Wizard):
 
         # Clean the slate
         self.cmd.unpick()
-        # self.do_select(SELECTION_NAME, 'none')
-        # self.active_selections = cmd.get_names('selections', 1)
         self.prompt = ['Make a selection and then hit search!']
         self.app = app
-
-        # type Key = (Object, Model, Segi, Chain, Resn, Resi, Name)
-        # type Val = Selection corresponding to the key
-        # word_list :: Dict Key Val
-        self.word_list = {}
 
         # Default values
         self.rmsd_cutoff = 1.0
@@ -79,10 +56,10 @@ class MasterSearch(Wizard):
 
         return [
             [1, 'MASTER Search Engine', ''],
-            [2, 'Search', 'cmd.get_wizard().launch_search()'],
             [3, 'RMSD Cutoff: ' + str(self.rmsd_cutoff) + ' Angstroms', 'rmsd'],
             [3, 'Max Matches: ' + str(self.number_of_structures) + ' results', 'num_structures'],
             [3, 'Full Matches: ' + ['No', 'Yes'][self.full_match], 'full_matches'],
+            [2, 'Search', 'cmd.get_wizard().launch_search()'],
             [2, 'Done', 'cmd.set_wizard()']]
 
     #
@@ -123,7 +100,7 @@ class MasterSearch(Wizard):
         to return.  Values range from 10 to 2000.
         """
         num_structures_menu = [[2, 'Number of Results', '']]
-        for n in [10, 20, 50, 100, 200, 500, 1000]:
+        for n in [10, 20, 50, 100, 200, 500]:
             num_structures_menu.append(
                 [1, str(n), 'cmd.get_wizard().set_num_structures(' + str(n) + ')'])
         return num_structures_menu
@@ -150,19 +127,22 @@ class MasterSearch(Wizard):
     #
     def launch_search(self):
         active_selections = cmd.get_names('selections', 1)
-        selection = active_selections[0] if active_selections else 'all'
-        pdbstr = cmd.get_pdbstr(selection)
 
-        self.stop_search()
-        #self.delete_results()
-        self.searchThread = SearchThread(
-            self.rmsd_cutoff,
-            self.number_of_structures,
-            self.full_match,
-            pdbstr,
-            self.url,
-            self.cmd)
-        self.searchThread.start()
+        if len(active_selections) == 0:
+            self.prompt = ['must have an active selection!']
+        else:
+            selection = active_selections[0]
+            pdbstr = cmd.get_pdbstr(selection)
+
+            self.stop_search()
+            self.searchThread = SearchThread(
+                self.rmsd_cutoff,
+                self.number_of_structures,
+                self.full_match,
+                pdbstr,
+                self.url,
+                self.cmd)
+            self.searchThread.start()
 
     #
     def stop_search(self, message=''):
