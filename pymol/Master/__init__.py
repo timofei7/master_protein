@@ -6,8 +6,8 @@ from pymol.wizard import Wizard
 from pymol import cmd
 from search_thread import *
 
-URL = "http://127.0.0.1:5000/api/search"
-# URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
+# URL = "http://127.0.0.1:5000/api/search"
+URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
 
 #TODO: use:
 #--matchInFile     a file produced by --matchOutFile. If specified with
@@ -130,8 +130,11 @@ class MasterSearch(Wizard):
         active_selections = cmd.get_names('selections', 1)
 
         if len(active_selections) == 0:
-            self.prompt = ['must have an active selection!']
+            msg = 'must have an active selection!'
+            print(msg)
+            self.prompt = [msg]  # doesn't always work
         else:
+            print str(active_selections)
             selection = active_selections[0]
             pdbstr = cmd.get_pdbstr(selection)
 
