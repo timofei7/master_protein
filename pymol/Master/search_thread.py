@@ -44,7 +44,7 @@ class SearchThread(threading.Thread):
             jsondata = json.loads(streamdata)
             if 'progress' in jsondata:
                 progs = jsondata['progress'].strip()
-                print('progress: ' + progs)
+                print("processing: {0:.0%}".format(float(progs)))
             elif 'error' in jsondata:
                 raise Exception(jsondata['error'])
             else:
@@ -72,6 +72,7 @@ class SearchThread(threading.Thread):
             finally:
                 self.concurrency_management['lock'].release()
 
+            # setup pycurl connection to server
             self.conn = pycurl.Curl()
             self.conn.setopt(pycurl.URL, self.url)
             self.conn.setopt(pycurl.FOLLOWLOCATION, 1)
@@ -85,6 +86,7 @@ class SearchThread(threading.Thread):
 
             data = [
                 ("topN", str(self.num_structures)),
+                ("structOutType", "match" if not self.full_matches else "full"),
                 ("query", (pycurl.FORM_BUFFER, 'sele.pdb', pycurl.FORM_BUFFERPTR, self.query))
             ]
             self.conn.setopt(pycurl.HTTPPOST, data)
@@ -102,12 +104,14 @@ class SearchThread(threading.Thread):
                         self.match_id = jsondata['results'].strip()
                         if 'matches' in jsondata:
                             for index, match in enumerate(jsondata['matches']):
+                                # uncompress and decode matches
                                 unencoded = base64.standard_b64decode(match)
                                 uncompressed = zlib.decompress(unencoded)
                                 header = uncompressed.splitlines()[0]
                                 phid = re.search('/(.*?).pds', header).group(1).split('/')
                                 hid = phid[len(phid)-1] + '.' + str(index)
-                                print('decoded file header: ' + header)
+                                print('found: ' + hid + ' ' + header.split('pds')[1])
+                                # load the pdb and group
                                 self.cmd.read_pdbstr(str(uncompressed), hid)
                                 self.cmd.group(self.match_id, hid)
 
@@ -120,6 +124,7 @@ class SearchThread(threading.Thread):
                 print("Trouble posting request: " + self.error)
             else:
                 print("Trouble posting request: " + e.message)
+                print(traceback.format_exc())
 
         finally:
             # once done set ended atomically
@@ -129,7 +134,6 @@ class SearchThread(threading.Thread):
             finally:
                 self.concurrency_management['lock'].release()
 
-            #self.cmd.orient(SELECTION_NAME)
 
     def stop(self, message=''):
         """

@@ -8,7 +8,8 @@ see README.md for instructions on how to get this running
 from flask import Flask, jsonify, request, render_template
 from flask import redirect, url_for, send_from_directory
 from flask import Response
-import json, time
+import json
+import time
 from MasterSearch import *
 import zlib
 import base64
