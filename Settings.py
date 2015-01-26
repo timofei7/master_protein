@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 """
 Put settings here for various files necessary
+author:   Tim Tregubov, 12/2014
 """
 
 import os
 
 
 class Default(object):
+    """
+    default settings for the server"
+    """
+
     BASEDIR = os.path.dirname(__file__)
 
     # # # #  edit this section # # # #

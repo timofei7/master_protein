@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
 the main master search functionality
+author:   Tim Tregubov, 12/2014
 """
 
 import os
@@ -28,20 +29,30 @@ defaults = {
 
 
 class MasterSearch(object):
+    """
+    main class
+    uses an rq redis worker to submit a background task
+    to do the actual search
+    """
 
     app = None
     db_size = 0
 
     def __init__(self, app):
-        # could do things like load the database into memory or setup caching etc
+        """
+        sets up some initial parameters and a redis queue and connection
+        """
+
         self.db_size = sum(1 for line in open(app.config['TARGET_LIST_PATH']) if line.rstrip())
         self.app = app
         self.redis_conn = Redis()
         self.rq = Queue(connection=self.redis_conn)
         print('init with db size: ' + str(self.db_size))
 
-    # process the query
     def process(self, query_file, arguments):
+        """
+        process the query
+        """
         error = None
         search_job = None
         tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])
@@ -60,8 +71,10 @@ class MasterSearch(object):
         # TODO: need to clean up the above somewhere later
         return search_job, tempdir, error
 
-    # convert pdb to pds format
     def pdb2pds(self, pdbfilepath):
+        """
+        convert pdb to pds format
+        """
         # if already a pds do nothing
         ext = os.path.splitext(pdbfilepath)[1]
         if ext == '.pds' or ext == 'pds':
@@ -86,12 +99,14 @@ class MasterSearch(object):
         except Exception as e:
             raise Exception("couldn't convert file from pdb2pds: " + e.message)
 
-    # perform the search
     def qsearch(self, query_filepath, arguments):
+        """
+        perform the search
+        """
 
         # required arguments
         tempdir, qfile = os.path.split(query_filepath)
-        prefix, ext = os.path.splitext(qfile)
+        # prefix, ext = os.path.splitext(qfile)
         match_out = os.path.join(tempdir, 'matches')
         seq_out = os.path.join(tempdir, 'seq')
         struct_out = os.path.join(tempdir, 'struct')

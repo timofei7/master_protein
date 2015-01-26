@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+"""
+search thread for the pymol master plugin
+uses pycurl to connect to a remote server
+and uses a long running http pull to get processing updates
+this is because the processing is never really very long so this is sufficient
+uses http for simplicity and compatibility.
+author:   Tim Tregubov, 12/2014
+"""
+
 
 import threading
 import json
@@ -9,8 +19,11 @@ from StringIO import StringIO
 import traceback
 
 
-
 class SearchThread(threading.Thread):
+    """
+    search thread allows the ui to remain responsive while this sends off the search request and waits
+    """
+
     def __init__(
             self, rmsd, num_struct, full_matches, pdbstrs, url, thecmd):
         """
@@ -38,8 +51,10 @@ class SearchThread(threading.Thread):
                                        'ended': False,  # True once the thread finishes consuming
                                        'lock': threading.Lock()}  # This guards the 'begun' and 'end' variables
 
-    # callback for processing data
     def on_receive(self, streamdata):
+        """
+        callback for processing data
+        """
         try:
             jsondata = json.loads(streamdata)
             if 'progress' in jsondata:
@@ -58,7 +73,6 @@ class SearchThread(threading.Thread):
             self.error = 'error processing response: ' + e.message
             return -1  # will trigger a close
 
-    # Send a search request and await results
     def run(self):
         """
         This method will send the search request to the server
@@ -137,7 +151,7 @@ class SearchThread(threading.Thread):
 
     def stop(self, message=''):
         """
-        abort abort
+        abort abort!
         """
         self.concurrency_management['lock'].acquire()
         try:

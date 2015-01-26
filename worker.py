@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 """
 could be used to add handling for errors
+currently doesn't do anything
+author:   Tim Tregubov, 12/2014
 """
 
 import sys

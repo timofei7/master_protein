@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 """
- just breaks out the processes that are run asynchronously in its own file
+breaks out the processes that are run asynchronously into its own file
+author:   Tim Tregubov, 12/2014
 """
 
 
@@ -10,9 +11,11 @@ import subprocess
 import sys
 
 
-# perform the search
-# this is a long running process best called asynchronously via rq
 def search(cmd, basedir, tempdir, db_size):
+    """
+    perform the search
+    this is a long running process best called asynchronously via rq
+    """
     progressfile_path = os.path.join(tempdir, 'progress')
     progressfile = open(progressfile_path, "w+")
     fileid = os.path.basename(os.path.normpath(tempdir)).strip()

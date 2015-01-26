@@ -2,6 +2,7 @@
 """
 Flask App for MasterServer
 see README.md for instructions on how to get this running
+author:   Tim Tregubov, 12/2014
 """
 
 

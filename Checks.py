@@ -1,6 +1,8 @@
 """
 some sanity checks
+author:   Tim Tregubov, 12/2014
 """
+
 from werkzeug.utils import secure_filename
 # app is injected in here later ignore errors
 

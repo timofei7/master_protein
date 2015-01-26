@@ -1,13 +1,18 @@
 #!/usr/bin/env python
-#
-#
-#
+"""
+PyMol plugin for MASTER protein search
+connects to a remote server
+author:   Tim Tregubov, 12/2014
+"""
+
+
+
 from pymol.wizard import Wizard
 from pymol import cmd
 from search_thread import *
 
-# URL = "http://127.0.0.1:5000/api/search"
-URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
+URL = "http://127.0.0.1:5000/api/search"
+# URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
 
 #TODO: use:
 #--matchInFile     a file produced by --matchOutFile. If specified with

@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 #  just a script to mount a ramdisk on osx and copy over the datafiles to it
-#
+#  author:  Tim Tregubov,  12/2014
 
 diskutil erasevolume HFS+ 'RamDisk' `hdiutil attach -nomount ram://10526720`
 echo "copying to ramdisk"

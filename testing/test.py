@@ -2,6 +2,7 @@
 """
 testing file for masterapp showing how to send it a file and retrieve progress
 and the file itself
+author:   Tim Tregubov, 12/2014
 """
 
 
