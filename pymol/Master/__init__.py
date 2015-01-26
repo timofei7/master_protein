@@ -5,19 +5,12 @@ connects to a remote server
 author:   Tim Tregubov, 12/2014
 """
 
-
-
 from pymol.wizard import Wizard
 from pymol import cmd
 from search_thread import *
 
 URL = "http://127.0.0.1:5000/api/search"
 # URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
-
-#TODO: use:
-#--matchInFile     a file produced by --matchOutFile. If specified with
-#    --query, can skip search and produce outputs directly.
-# to pull in full match for a previously searched
 
 
 class MasterSearch(Wizard):
@@ -40,7 +33,6 @@ class MasterSearch(Wizard):
 
         self.searchThread = None
 
-    #
     def cleanup(self):
         """
         Once we are done with the wizard, we should set various pymol
@@ -48,7 +40,6 @@ class MasterSearch(Wizard):
         """
         self.stop_search()
 
-    #
     def get_panel(self):
         """
         main menu panel
@@ -68,7 +59,6 @@ class MasterSearch(Wizard):
             [2, 'Search', 'cmd.get_wizard().launch_search()'],
             [2, 'Done', 'cmd.set_wizard()']]
 
-    #
     def set_rmsd(self, rmsd):
         """
         This is the method that will be called once the user has
@@ -77,7 +67,6 @@ class MasterSearch(Wizard):
         self.rmsd_cutoff = rmsd
         self.cmd.refresh_wizard()
 
-    #
     def create_rmsd_menu(self):
         """
         This method will create a wizard menu for the possible RMSD cutoff values.
@@ -90,7 +79,6 @@ class MasterSearch(Wizard):
                 [1, str(rmsd), 'cmd.get_wizard().set_rmsd(' + str(rmsd) + ')'])
         return rmsd_menu
 
-    #
     def set_num_structures(self, num_structures):
         """
         This is the method that will be called once the user
@@ -99,7 +87,6 @@ class MasterSearch(Wizard):
         self.number_of_structures = num_structures
         self.cmd.refresh_wizard()
 
-    #
     def create_num_structures_menu(self):
         """
         This method will create a wizard menu for the possible number of structures
@@ -111,16 +98,15 @@ class MasterSearch(Wizard):
                 [1, str(n), 'cmd.get_wizard().set_num_structures(' + str(n) + ')'])
         return num_structures_menu
 
-    #
     def set_full_matches(self, full_matches):
         """
         """
         self.full_match = full_matches
         self.cmd.refresh_wizard()
 
-    #
     def create_full_matches_menu(self):
         """
+        creates the wiard menu for the full matches boolean option
         """
         full_matches_menu = []
         full_matches_menu.append([2, 'Full Matches', ''])
@@ -130,8 +116,11 @@ class MasterSearch(Wizard):
             [1, 'Yes', 'cmd.get_wizard().set_full_matches(True)'])
         return full_matches_menu
 
-    #
     def launch_search(self):
+        """
+        launches the search in the separate thread
+        does some basic checking and gets selection
+        """
         active_selections = cmd.get_names('selections', 1)
 
         if len(active_selections) == 0:
@@ -153,7 +142,6 @@ class MasterSearch(Wizard):
                 self.cmd)
             self.searchThread.start()
 
-    #
     def stop_search(self, message=''):
         if self.searchThread:
             self.searchThread.stop(message)
@@ -167,7 +155,7 @@ def master_search(app):
     cmd.set_wizard(wiz)
 
 
-# add "suns_search" as pymol command
+# add "master_search" as pymol command
 cmd.extend('master_search', master_search)
 
 # trick to get "wizard master_search" working

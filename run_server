@@ -1,0 +1,18 @@
+#!/bin/bash
+#
+
+mkdir processing 2>&1 >/dev/null
+
+kill `cat /tmp/rqworker1.pid`
+kill `cat /tmp/rqworker2.pid`
+kill `cat /tmp/rqworker3.pid`
+kill `cat /tmp/rqworker4.pid`
+kill `cat /tmp/rqworker5.pid`
+kill `cat /tmp/rqworker6.pid`
+rqworker --pid /tmp/rqworker1.pid &
+rqworker --pid /tmp/rqworker2.pid &
+rqworker --pid /tmp/rqworker3.pid &
+rqworker --pid /tmp/rqworker4.pid &
+rqworker --pid /tmp/rqworker5.pid &
+rqworker --pid /tmp/rqworker6.pid &
+gunicorn -w 6 --graceful-timeout 1200 --timeout 1200 -b 129.170.192.67:5000 MasterApp:app
