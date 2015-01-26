@@ -10,7 +10,7 @@ from pymol import cmd
 from search_thread import *
 
 URL = "http://127.0.0.1:5000/api/search"
-# URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
+#URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
 
 
 class MasterSearch(Wizard):
@@ -42,7 +42,7 @@ class MasterSearch(Wizard):
 
     def get_panel(self):
         """
-        main menu panel
+        sets up the main menu panel
         """
         rmsd_menu = self.create_rmsd_menu()
         self.menu['rmsd'] = rmsd_menu
@@ -51,6 +51,7 @@ class MasterSearch(Wizard):
         full_matches_menu = self.create_full_matches_menu()
         self.menu['full_matches'] = full_matches_menu
 
+        # num is the type of display  1 is title only, 2 is button, 3 is dropdown
         return [
             [1, 'MASTER Search Engine', ''],
             [3, 'RMSD Cutoff: ' + str(self.rmsd_cutoff) + ' Angstroms', 'rmsd'],
