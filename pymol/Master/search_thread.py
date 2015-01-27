@@ -100,7 +100,7 @@ class SearchThread(threading.Thread):
 
             data = [
                 ("topN", str(self.num_structures)),
-                ("structOutType", "match" if not self.full_matches else "full"),
+                ("outType", "match" if not self.full_matches else "full"),
                 ("query", (pycurl.FORM_BUFFER, 'sele.pdb', pycurl.FORM_BUFFERPTR, self.query))
             ]
             self.conn.setopt(pycurl.HTTPPOST, data)
