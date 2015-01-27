@@ -131,7 +131,7 @@ class MasterSearch(object):
                 cmd.append('--'+k)
                 cmd.append(v)
 
-        job = self.rq.enqueue(Tasks.search, cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size)
+        job = self.rq.enqueue_call(Tasks.search, args=(cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size), timeout=600)
 
         return job
 
