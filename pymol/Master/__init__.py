@@ -9,8 +9,8 @@ from pymol.wizard import Wizard
 from pymol import cmd
 from search_thread import *
 
-URL = "http://127.0.0.1:5000/api/search"
-#URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
+#URL = "http://127.0.0.1:5000/api/search"
+URL = "http://ararat.cs.dartmouth.edu:5000/api/search"
 
 
 class MasterSearch(Wizard):
