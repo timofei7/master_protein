@@ -51,7 +51,8 @@ def search(cmd, basedir, tempdir, db_size):
     err += process.stderr.readlines()  # append any stderr to stdout "Errors"
 
     # compress the resultsdir
-    compress_cmd = ['/usr/bin/tar', '-C', basedir, '-czf', os.path.join(basedir, tarname), fileid]
+    compress_cmd = ['/usr/bin/tar', '-C', basedir, '-cf', fileid, ' | grep --best --quiet > ', os.path.join(basedir, tarname)]
+#    compress_cmd = ['/usr/bin/tar', '-C', basedir, '-czf', os.path.join(basedir, tarname), fileid]
     compress_process = subprocess.Popen(compress_cmd,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,

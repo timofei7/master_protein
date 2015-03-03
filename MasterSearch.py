@@ -17,7 +17,7 @@ import re
 defaults = {
     'rmsdCut': '1.5',
     'topN': '25',
-    'structOutType': 'match',
+    'outType': 'match',
     'bbRMSD':  False,
     'rmsdMode': '0',
     'tune': '0.5',
@@ -117,8 +117,8 @@ class MasterSearch(object):
                '--query', query_filepath,
                '--targetList', self.app.config['TARGET_LIST_PATH'],
                '--rmsdCut', rmsd_cut,
-               '--matchOutFile', match_out,
-               '--seqOutFile', seq_out,
+               '--matchOut', match_out,
+               '--seqOut', seq_out,
                '--topN', top_n,
                '--structOut', struct_out]
 
