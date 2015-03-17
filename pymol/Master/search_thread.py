@@ -103,7 +103,7 @@ class SearchThread(threading.Thread):
                 ("outType", "match" if not self.full_matches else "full"),
                 ("query", (pycurl.FORM_BUFFER, 'sele.pdb', pycurl.FORM_BUFFERPTR, self.query)), 
                 ("bbRMSD", "on"),
-                ("rmsdCut", self.rmsd_cutoff)
+                ("rmsdCut", str(self.rmsd_cutoff))
             ]
             self.conn.setopt(pycurl.HTTPPOST, data)
 
