@@ -18,7 +18,7 @@ defaults = {
     'rmsdCut': '1.5',
     'topN': '25',
     'outType': 'match',
-    'bbRMSD':  False,
+    'bbRMSD':  True,
     'rmsdMode': '0',
     'tune': '0.5',
     'dEps': False,
@@ -53,6 +53,7 @@ class MasterSearch(object):
         """
         process the query
         """
+
         error = None
         search_job = None
         tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])
@@ -104,6 +105,7 @@ class MasterSearch(object):
         perform the search
         """
 
+        print("OPTIONS" + str(arguments))
         # required arguments
         tempdir, qfile = os.path.split(query_filepath)
         # prefix, ext = os.path.splitext(qfile)
@@ -112,6 +114,7 @@ class MasterSearch(object):
         struct_out = os.path.join(tempdir, 'struct')
         rmsd_cut = arguments['rmsdCut'] if 'rmsdCut' in arguments else defaults['rmsdCut']
         top_n = arguments['topN'] if 'topN' in arguments else defaults['topN']
+        out_type = arguments['outType'] if 'outType' in arguments else defaults['outType']
 
         cmd = [self.app.config['MASTER_PATH'],
                '--query', query_filepath,
@@ -120,18 +123,13 @@ class MasterSearch(object):
                '--matchOut', match_out,
                '--seqOut', seq_out,
                '--topN', top_n,
-               '--structOut', struct_out]
+               '--structOut', struct_out,
+               '--outType', out_type]
 
-        # add in optional provided arguments
-        print("OPTIONS" + str(arguments))
-        for k, v in arguments.iteritems():
-            if k == 'bbRMSD' or k == 'dEps':
-                cmd.append('--'+k)
-            else:
-                cmd.append('--'+k)
-                cmd.append(v)
+        if 'bbRMSD' in arguments:
+          cmd.append('--bbRMSD')
 
-        job = self.rq.enqueue_call(Tasks.search, args=(cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size), timeout=600)
+        job = self.rq.enqueue_call(Tasks.search, args=(cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size), timeout=3600)
 
         return job
 
