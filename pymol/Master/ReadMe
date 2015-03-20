@@ -1,0 +1,18 @@
+--key points on logo implementation:
+
+	1. use Prody to parse pdbstrs
+
+	2. use separate thread to display Tkinter GUI is tricky. All GUI components should be instancialized  within one main thread. So make things easier, I use separate process for displaying the logo GUI and use pipe to communicate between different processes. Note, the pipe read function is blocking, so for everything you need to write to stdout, you should follow flush command.
+
+	3. You have to start pymol in the plugin folder
+	    that is: 1. cd into the directory where you place the pymol plugin. (cd path_to_plugin/Master/) 2. then start pymol.
+	    This is because all tmp files that are using by this plugin and on the relative path as shown in constants.py. Change the path if you need to.
+
+
+--potential improvement:
+
+	1. generate bitmap instead of stretching  pre-stored images for residue letters. Image stretching can not yield high resolution logo sequence. I’ve tried some possible ways:1. dispaly text instead of image, but I didn’t find a font that will keep the width while stretching the height of a character. 2. use weblogo service 3. read source codes of weblogo as inspiration, write scripts that will generate bitmap for characters with different scale.
+
+	2. currently, the window size of logo GUI is fixed, however you can modify constants.py to adjust the size of the window(need to reload the plugin). Ideally, the GUI needs to be resizable in order to display on different screens with different size.
+
+	3. parse pdbstr on server side. Currently, the plugin will parse pdbstrs from MASTER search, and store the tmp data in the cache/ folder. This can avoid using Prody on the client side.

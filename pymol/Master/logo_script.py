@@ -4,6 +4,10 @@ import sys, getopt
 from gui import *
 from constants import *
 import os
+'''
+script for showing sequence logo GUI.
+Running in a separate process.
+'''
 
 def run(search_id, flag):
     root = Tk()
@@ -30,8 +34,10 @@ def main(search_id, flag):
     run(search_id, flag)
 
 if __name__ == "__main__":
-    # for arg in sys.argv:
-    #     print arg
+    '''
+    argv[1]: search_id
+    argv[2]: flag for logo type: sequence logo or frequency logo
+    '''
     main(sys.argv[1], sys.argv[2])
 
 

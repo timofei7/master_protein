@@ -35,6 +35,9 @@ class PDBParser():
 
 
 		def initthreeToOne(self):
+				'''
+				three 2 one mapping
+				'''
 				# 3-letter to 1-letter mapping
 				threeToOne = {}
 				threeToOne['ALA'] = 'A'

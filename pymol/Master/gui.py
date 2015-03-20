@@ -20,6 +20,9 @@ class LetterLabel(Label):
 
 
 class ResidueLabel(Label):
+    '''
+    Label with action listeners implemented
+    '''
     def __init__(self, master, residue, position, textSize, search_id):
         Label.__init__(self, master)
         self.position = position
@@ -34,7 +37,6 @@ class ResidueLabel(Label):
         def leave_event(event):
             self.config(bg = "white")
         def click_one_event(event):
-            # to be implemented
             print 'click search '+self.search_id+' chain '+self.residue[1]+' num '+self.residue[2]
             sys.stdout.flush()
 
@@ -45,7 +47,9 @@ class ResidueLabel(Label):
         self.bind("<Button-1>", click_one_event)
 
 class LogoGUI(Frame):
-
+    '''
+    create a logo GUI frame
+    '''
     def __init__(self, search_id, query, seqs, textSize, flag, master = None):
         Frame.__init__(self, master)
         self.search_id = search_id
@@ -69,27 +73,8 @@ class LogoGUI(Frame):
 
         # inner frame
         line_frame = Frame(line_frame_cvs)
-        # # stack two frames on scrollable canvas
-        # # one for sequence logo, one for frequency logo
-        # feq_frame = Frame(line_frame)
-        # seq_frame = Frame(line_frame)
-        # feq_frame.grid(row=0, column=0, sticky="nsew")
-        # seq_frame.grid(row=0, column=0, sticky="nsew")
 
-        # # radio button to switch between two views
-        # var = IntVar()
-        # def sel():
-        #     # print 'select '+str(var.get())
-        #     if str(var.get()) == '1':
-        #         seq_frame.tkraise()
-        #     else:
-        #         feq_frame.tkraise()
-        # R1 = Radiobutton(header, text="Sequence Logo", variable=var, value=1,command=sel)
-        # R1.pack(side = 'left')
-        # R2 = Radiobutton(header, text="Frequency Logo", variable=var, value=2,command=sel)
-        # R2.pack(side = 'left')
-        # var.set(1) # initial state is 1
-
+        # y-axis
         def create_Y_Axis(numOfBits):
         	# create y axis
 	        left_panel = Frame(self)

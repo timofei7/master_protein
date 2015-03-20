@@ -75,6 +75,18 @@ class SearchThread(threading.Thread):
             self.error = 'error processing response: ' + e.message
             return -1  # will trigger a close
 
+    def new_group_name(self):
+        """
+        This method returns a string for a new PyMOL object name to be used
+        for storing the latest search results
+        """
+        name = ''
+        for k in range(1, 1001):
+            name = 'S%02d' % (k)
+            if (not (name in self.cmd.get_names())):
+                break
+        return name
+
     def run(self):
         """
         This method will send the search request to the server
@@ -98,6 +110,9 @@ class SearchThread(threading.Thread):
             self.conn.setopt(pycurl.TIMEOUT, 1200)
             self.conn.setopt(pycurl.NOSIGNAL, 1)
 
+            # create a new unique ID
+            self.match_id = self.new_group_name();
+            
             # print("pdbs: " + str(self.query))
             tmppath = 'cache/'+str(self.match_id)+'.tmp'
             '''
@@ -123,7 +138,9 @@ class SearchThread(threading.Thread):
             data = [
                 ("topN", str(self.num_structures)),
                 ("outType", "match" if not self.full_matches else "full"),
-                ("query", (pycurl.FORM_BUFFER, 'sele.pdb', pycurl.FORM_BUFFERPTR, self.query))
+                ("query", (pycurl.FORM_BUFFER, 'sele.pdb', pycurl.FORM_BUFFERPTR, self.query)),
+                ("bbRMSD", "on"),
+                ("rmsdCut", str(self.rmsd_cutoff))
             ]
             self.conn.setopt(pycurl.HTTPPOST, data)
 
@@ -137,7 +154,7 @@ class SearchThread(threading.Thread):
                 try:
                     jsondata = json.loads(self.databuffer.getvalue())
                     if 'results' in jsondata:
-                        self.match_id = jsondata['results'].strip()
+                        # self.match_id = jsondata['results'].strip()
                         # create tmp file
                         f = open('cache/'+str(self.match_id),'w+')
                         f.write(self.queryString+'\n')
