@@ -17,6 +17,8 @@ import pycurl
 import base64
 from StringIO import StringIO
 import traceback
+from util import *
+import os
 
 
 class SearchThread(threading.Thread):
@@ -73,18 +75,6 @@ class SearchThread(threading.Thread):
             self.error = 'error processing response: ' + e.message
             return -1  # will trigger a close
 
-    def new_group_name(self):
-        """
-        This method returns a string for a new PyMOL object name to be used
-        for storing the latest search results
-        """
-        name = ''
-        for k in range(1, 1001):
-            name = 'S%02d' % (k)
-            if (not (name in self.cmd.get_names())):
-                break
-        return name
-
     def run(self):
         """
         This method will send the search request to the server
@@ -108,14 +98,32 @@ class SearchThread(threading.Thread):
             self.conn.setopt(pycurl.TIMEOUT, 1200)
             self.conn.setopt(pycurl.NOSIGNAL, 1)
 
-            print("pdbs: " + str(self.query))
+            # print("pdbs: " + str(self.query))
+            tmppath = 'cache/'+str(self.match_id)+'.tmp'
+            '''
+            parse query
+
+            '''
+            tmp = open(tmppath, 'w+')
+            tmp.truncate()
+            tmp.write(str(self.query))
+            tmp.close()
+            # get sequence from pdbstr
+            parser = PDBParser(tmppath)
+            res = parser.getSequence()
+            seq = []
+            # print res
+            for residue in res:
+                tmpstr = ','.join(residue)
+                seq.append(tmpstr)
+            self.queryString = ' '.join(seq)
+            # print 'query string', self.queryString
+
 
             data = [
                 ("topN", str(self.num_structures)),
                 ("outType", "match" if not self.full_matches else "full"),
-                ("query", (pycurl.FORM_BUFFER, 'sele.pdb', pycurl.FORM_BUFFERPTR, self.query)), 
-                ("bbRMSD", "on"),
-                ("rmsdCut", str(self.rmsd_cutoff))
+                ("query", (pycurl.FORM_BUFFER, 'sele.pdb', pycurl.FORM_BUFFERPTR, self.query))
             ]
             self.conn.setopt(pycurl.HTTPPOST, data)
 
@@ -129,9 +137,11 @@ class SearchThread(threading.Thread):
                 try:
                     jsondata = json.loads(self.databuffer.getvalue())
                     if 'results' in jsondata:
-                        # create a new unique ID
-                        self.match_id = self.new_group_name();
-#                        self.match_id = jsondata['results'].strip()
+                        self.match_id = jsondata['results'].strip()
+                        # create tmp file
+                        f = open('cache/'+str(self.match_id),'w+')
+                        f.write(self.queryString+'\n')
+                        f.write('-----------------\n')
                         if 'matches' in jsondata:
                             for index, match in enumerate(jsondata['matches']):
                                 # uncompress and decode matches
@@ -139,12 +149,28 @@ class SearchThread(threading.Thread):
                                 uncompressed = zlib.decompress(unencoded)
                                 header = uncompressed.splitlines()[0]
                                 phid = re.search('/(.*?).pds', header).group(1).split('/')
-                                hid = self.match_id + "-" + phid[len(phid)-1] + '.' + str(index)
+                                hid = phid[len(phid)-1] + '.' + str(index)
                                 print('found: ' + hid + ' ' + header.split('pds')[1])
                                 # load the pdb and group
                                 self.cmd.read_pdbstr(str(uncompressed), hid)
                                 self.cmd.group(self.match_id, hid)
-
+                                # clear tmp file
+                                tmp = open(tmppath, 'w+')
+                                tmp.truncate()
+                                tmp.write(str(uncompressed))
+                                tmp.close()
+                                # get sequence from pdbstr
+                                parser = PDBParser(tmppath)
+                                res = parser.getSequence()
+                                seq = []
+                                for residue in res:
+                                    seq.append(residue[0])
+                                # append seq to file
+                                f.write(''.join(seq)+'\n')
+                            os.remove(tmppath)
+                    # add current search to search history
+                    self.cmd.get_wizard().add_new_search(self.match_id)
+                    f.close()
                 except Exception as e:
                     print('error processing response: ' + e.message + "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
@@ -182,3 +208,6 @@ class SearchThread(threading.Thread):
             self.concurrency_management['lock'].release()
             if message != '':
                 print message
+
+
+    # def cacheData(self):
