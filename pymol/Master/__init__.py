@@ -8,7 +8,6 @@ author:   Tim Tregubov, 12/2014
 from pymol.wizard import Wizard
 from pymol import cmd
 from search_thread import *
-from seq_logo import *
 import os
 import subprocess
 import threading
@@ -182,7 +181,7 @@ class MasterSearch(Wizard):
         # start_seq_logo_thread(cmd, self.search)
         search_action_id = self.search
         stm = ''
-        p = subprocess.Popen(['python','logo_script.py', str(search_action_id), str(flag)], stdout=subprocess.PIPE, bufsize=1)
+        p = subprocess.Popen(['python', os.path.dirname(os.path.realpath(__file__)) + '/logo_script.py', str(search_action_id), str(flag)], stdout=subprocess.PIPE, bufsize=1)
         while True:
             # print "Looping"
             line = p.stdout.readline()
