@@ -180,7 +180,7 @@ class MasterSearch(Wizard):
         search_action_id = self.search
         stm = ''
         #p = subprocess.Popen(["python", os.path.dirname(os.path.realpath(__file__)) + '/logo_script.py', str(search_action_id), str(flag)], stdout=subprocess.PIPE, bufsize=1)
-        p = subprocess.call(['python', os.path.dirname(os.path.realpath(__file__)) + '/print.py'], stdout=subprocess.PIPE, bufsize=1)
+        p = subprocess.Popen(['python', os.path.dirname(os.path.realpath(__file__)) + '/print.py'], stdout=subprocess.PIPE, bufsize=1)
 
         out, err = p.communicate()
         print out
@@ -188,8 +188,7 @@ class MasterSearch(Wizard):
         while True:
             # print "Looping"
             line = p.stdout.readline()
-            print "The line: "+ line
-            if line == "":
+            if not line:
                 break
             if 'click' not in line:
                 continue
@@ -212,6 +211,7 @@ class MasterSearch(Wizard):
         if os.path.exists(CACHE_PATH+search_action_id):
             print 'clean up for search ',search_action_id
             shutil.rmtree(CACHE_PATH+search_action_id)
+
 
     def launch_show_logo_operation(self, flag):
         # flag used as indicator for Sequence or Frequency logo

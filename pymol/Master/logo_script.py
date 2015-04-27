@@ -12,7 +12,7 @@ def run(search_id, flag):
     root = Tk()
     seqs = []
     path = 'cache/'+str(search_id)
-    print path
+
     lineNum = 0
     query = 'default'
     with open(path, 'r') as f:
