@@ -21,6 +21,7 @@ class Default(object):
     PROCESSING_PATH = os.path.join(BASEDIR, 'processing')                   # directory to hold output files
     CONFIG_PATH = os.path.join(BASEDIR, 'config')                           # config dir for targetlists
     TARGET_LIST_PATH = os.path.join(CONFIG_PATH, 'targetList-fullBB')          # this is the name of the targetList file
+
     # # # #  done edits # # # #
 
     ALLOWED_EXTENSIONS = frozenset(['pdb', 'pds'])
