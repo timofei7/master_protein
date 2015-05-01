@@ -1,9 +1,8 @@
 #!/usr/bin/python
 
-import sys, getopt
+import sys, getopt, os
 from gui import *
 from constants import *
-import os
 '''
 script for showing sequence logo GUI.
 Running in a separate process.
@@ -13,6 +12,7 @@ def run(search_id, flag):
     root = Tk()
     seqs = []
     path = 'cache/'+str(search_id)
+
     lineNum = 0
     query = 'default'
     with open(path, 'r') as f:
@@ -39,6 +39,3 @@ if __name__ == "__main__":
     argv[2]: flag for logo type: sequence logo or frequency logo
     '''
     main(sys.argv[1], sys.argv[2])
-
-
-

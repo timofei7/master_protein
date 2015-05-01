@@ -175,13 +175,16 @@ class MasterSearch(Wizard):
         return select_operation_menu
 
 
-
-
     def seq_show_thread(self, flag):
         # start_seq_logo_thread(cmd, self.search)
         search_action_id = self.search
         stm = ''
-        p = subprocess.Popen(['python', os.path.dirname(os.path.realpath(__file__)) + '/logo_script.py', str(search_action_id), str(flag)], stdout=subprocess.PIPE, bufsize=1)
+        #p = subprocess.Popen(["python", os.path.dirname(os.path.realpath(__file__)) + '/logo_script.py', str(search_action_id), str(flag)], stdout=subprocess.PIPE, bufsize=1)
+        p = subprocess.Popen(['python', os.path.dirname(os.path.realpath(__file__)) + '/print.py'], stdout=subprocess.PIPE, bufsize=1)
+
+        out, err = p.communicate()
+        print out
+
         while True:
             # print "Looping"
             line = p.stdout.readline()
@@ -203,9 +206,12 @@ class MasterSearch(Wizard):
             highlight selected residue
             '''
             sys.stdout.flush()
+
         # clear cache data
-        print 'clean up for search ',search_action_id
-        shutil.rmtree(CACHE_PATH+search_action_id)
+        if os.path.exists(CACHE_PATH+search_action_id):
+            print 'clean up for search ',search_action_id
+            shutil.rmtree(CACHE_PATH+search_action_id)
+
 
     def launch_show_logo_operation(self, flag):
         # flag used as indicator for Sequence or Frequency logo
