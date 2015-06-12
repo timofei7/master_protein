@@ -1,0 +1,12 @@
+#!/bin/bash
+
+kill `cat /tmp/gunicorn.pid` 
+kill `cat /tmp/rqworker1.pid` 
+kill `cat /tmp/rqworker2.pid` 
+kill `cat /tmp/rqworker3.pid` 
+kill `cat /tmp/rqworker4.pid` 
+kill `cat /tmp/rqworker5.pid` 
+kill `cat /tmp/rqworker6.pid` 
+
+rm -f /tmp/rqworker*.pid 
+rm -f /tmp/gunicorn.pid
