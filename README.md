@@ -4,9 +4,9 @@ Method of Accelerated Search for Tertiary Ensemble Representatives
 
 This has two components:
 
-   - a Flask based web app that serves up an API for running
+   - a [Flask](http://flask.pocoo.org/) based web app that serves up an API for running
 master on a server.
-   - a PyMol Plugin that provides an interface for easily sending requests to the server search api.
+   - a [PyMol](https://www.pymol.org/) Plugin that provides an interface for easily sending requests to the server search api.
 
 ###prerequisites:###
 on osx install:
