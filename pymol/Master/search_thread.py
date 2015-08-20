@@ -27,7 +27,7 @@ class SearchThread(threading.Thread):
     """
 
     def __init__(
-            self, rmsd, num_struct, full_matches, pdbstrs, url, thecmd):
+            self, rmsd, num_struct, full_matches, pdbstrs, url, thecmd, dictionary):
         """
         This is the constructor for our SearchThread.  Each time we perform
         a structural search, a new thread will be created.
@@ -40,6 +40,7 @@ class SearchThread(threading.Thread):
         self.num_structures = num_struct
         self.full_matches   = full_matches
         self.query          = pdbstrs
+        self.dictionary     = dictionary
 
         # PyMOL routines keep their own copy of the 'cmd' object why?
         self.cmd = thecmd
@@ -112,21 +113,26 @@ class SearchThread(threading.Thread):
 
             # create a new unique ID
             self.match_id = self.new_group_name();
-            
-            # print("pdbs: " + str(self.query))
+
+            print("pdbs: " + str(self.query))
             tmppath = 'cache/'+str(self.match_id)+'.tmp'
+
             '''
             parse query
 
             '''
+
+            # write the pdbstr string into a tmp file created with the tmppath filename
             tmp = open(tmppath, 'w+')
             tmp.truncate()
             tmp.write(str(self.query))
             tmp.close()
-            # get sequence from pdbstr
+
+            # get sequence from pdbstr, which is in the temp file located at tmppath
             parser = PDBParser(tmppath)
             res = parser.getSequence()
             seq = []
+
             # print res
             for residue in res:
                 tmpstr = ','.join(residue)
@@ -134,7 +140,10 @@ class SearchThread(threading.Thread):
             self.queryString = ' '.join(seq)
             # print 'query string', self.queryString
 
+            # end of possibly un-needed code
 
+
+            # create data object, what kind of object is this?
             data = [
                 ("topN", str(self.num_structures)),
                 ("outType", "match" if not self.full_matches else "full"),
@@ -144,7 +153,7 @@ class SearchThread(threading.Thread):
             ]
             self.conn.setopt(pycurl.HTTPPOST, data)
 
-            # this runs the callpack every time we get new data
+            # this runs the callback every time we get new data
             self.conn.setopt(pycurl.WRITEFUNCTION, self.on_receive)
             self.conn.perform()
 
@@ -184,13 +193,17 @@ class SearchThread(threading.Thread):
                                     seq.append(residue[0])
                                 # append seq to file
                                 f.write(''.join(seq)+'\n')
+
+                            self.dictionary[self.match_id] = str(jsondata['tempdir']).split('/')[-1]
                             os.remove(tmppath)
+
                     # add current search to search history
                     self.cmd.get_wizard().add_new_search(self.match_id)
                     f.close()
                 except Exception as e:
                     print('error processing response: ' + e.message + "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
+
         except Exception as e:
             # check for self.error as that would contain certain types of errors that weren't exceptions
             if self.error:
