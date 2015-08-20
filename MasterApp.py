@@ -5,21 +5,24 @@ see README.md for instructions on how to get this running
 author:   Tim Tregubov, 12/2014
 """
 
-
 from flask import Flask, jsonify, request, render_template
 from flask import redirect, url_for, send_from_directory
 from flask import Response
 import json
 import time
 from MasterSearch import *
+from MasterLogo import *
 import zlib
 import base64
 import re
+import shlex
 
 # set up the flask app
 app = Flask(__name__)
+app.debug = True
 app.config.from_object('Settings.Default')
 masterSearch = MasterSearch(app)
+masterLogo = MasterLogo(app)
 
 import Checks
 Checks.app = app
@@ -56,7 +59,6 @@ def search():
         return jsonify({'error': 'no query file!'}), 201
 
     # start processing the query and give us some progress
-
     search_job, tempdir, error = masterSearch.process(query_file, sanitized)
     if error:
         return jsonify({'error': error}), 201
@@ -74,6 +76,8 @@ def search():
                     yield json.dumps({'progress': open(progressfile, 'r').readline()})
                 except Exception as e:
                     yield json.dumps({'error': e.message})
+
+            # finished finding matches, send the fileid to the client
             else:
                 if re.search('ERROR', search_job.return_value):
                     yield json.dumps({'error': search_job.return_value.replace("ERROR:", "")})
@@ -88,6 +92,7 @@ def search():
                         encoded_file = base64.standard_b64encode(compressed_file)
                         matches.append(encoded_file)
                 yield json.dumps({'results': search_job.result,
+                                  'tempdir': tempdir,
                                   'message': 'will be available for 24 hours',
                                   'matches': matches})
                 # TODO: implement cleaning up files
@@ -100,6 +105,43 @@ def processed_file(filename):
     return send_from_directory(app.config['PROCESSING_PATH'],
                                filename+".tar.gz")
 
+
+@app.route("/api/logo", methods=['POST', 'OPTIONS'])
+def logo_gen():
+    # check args
+    (is_allowed, not_allowed_list) = Checks.allowed_args(request.form)
+    if not is_allowed:
+        return jsonify({'error': 'bad parameters: ' + ', '.join(not_allowed_list)})
+
+    sanitized = Checks.sanitize_args(request.form)
+    search_id = str(sanitized['query'])
+#    search_id = "tmpWKCM67"
+
+    tempdir = os.path.join(app.config['PROCESSING_PATH'], search_id)
+    image_filepath = os.path.join(tempdir, 'logo.png')
+    seq_filepath = os.path.join(tempdir, 'seq')
+
+#    image_file = open(image_filepath, 'w+')
+#    image_file.close()
+
+    arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -B 1 -c 999 -o " + str(image_filepath) + " -t -1"
+    args = shlex.split(arg_string)
+
+    subprocess.call(args, stdout=subprocess.PIPE)
+ #   p.communicate()
+    
+    gif_filepath = os.path.join(tempdir, 'logo.gif')
+    convert_string = "convert " + image_filepath + " " + gif_filepath
+    args2 = shlex.split(convert_string)
+
+    subprocess.call(args2)
+
+    str_file = str(open(gif_filepath).read())
+    encoded_file = base64.standard_b64encode(str_file)
+
+    return Response(json.dumps({'results' : "yes",
+                          'logo'    : encoded_file,
+                          'message' : 'will be available for 24 hours'}),  mimetype='application/json')
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True)
