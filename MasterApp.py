@@ -105,6 +105,32 @@ def processed_file(filename):
     return send_from_directory(app.config['PROCESSING_PATH'],
                                filename+".tar.gz")
 
+@app.route("/api/logo", methods=['POST', 'OPTIONS'])
+def logo_gen():
+    # check args
+    (is_allowed, not_allowed_list) = Checks.allowed_args(request.form)
+    if not is_allowed:
+        return jsonify({'error': 'bad parameters: ' + ', '.join(not_allowed_list)})
+
+    tempdir = request.files['query']
+
+    logo_filepath = os.path.join(tempdir, 'logo.png')
+
+    arg_string = "perl -w /home/grigoryanlab/library//MaDCaT/scripts/seqAnal.pl -s MASTER/processing/tmp1W6qgF/seq -c 999 -o " + logo_filepath
+    args = arg_string.split()
+    #p = subprocess.Popen(args, stdout=subprocess.PIPE)
+
+    def generate():
+
+        str_file = str(open(logo_filepath).read())
+        compressed_file = zlib.compress(str_file, 5)
+        encoded_file = base64.standard_b64encode(compressed_file)
+
+        yield json.dumps({'results' : 'yes',
+                          'logo'    : "hello",
+                          'message' : 'will be available for 24 hours'})
+
+    return Response(generate(),  mimetype='application/json')
 
 @app.route("/api/logo", methods=['POST', 'OPTIONS'])
 def logo_gen():

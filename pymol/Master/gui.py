@@ -80,7 +80,7 @@ class LogoGUI(Frame):
 	        left_panel = Frame(self)
 	        left_panel.pack(side='left', fill = Y, expand = True)
 	        yaxis_canvas = Canvas(left_panel, height = LOGO_BAR_HEIGHT, width = 30)
-	        yaxis_canvas.pack(side='top', fill=X)	        
+	        yaxis_canvas.pack(side='top', fill=X)
 	        yaxis_canvas.create_line(10, 0, 10, LOGO_BAR_HEIGHT) # y axis
 	        yaxis_canvas.create_line(0, 1, 10, 1) # top
 	        yaxis_canvas.create_line(0, LOGO_BAR_HEIGHT-1, 10, LOGO_BAR_HEIGHT-1) # bottom
@@ -176,7 +176,7 @@ class Logo(Canvas):
 					components[residue] = 1
 				else:
 					components[residue] += 1
-			# normalize 
+			# normalize
 			for key in components:
 				components[key] /= float(len(self.seqs))
 			PSFM.append(components)
@@ -239,7 +239,7 @@ class LogoBar(Canvas):
 				# width
 				width = LOGO_BAR_WIDTH
 				if int(height) != 0:
-					# resizeImage 
+					# resizeImage
 					newFilePath = self.resizeImage(comp[0], height, width)
 					rcvs = ResidueCVS(self, newFilePath, height, width)
 					rcvs.pack(side = 'bottom')
@@ -279,7 +279,6 @@ class ResidueCVS(Canvas):
         self.image = PhotoImage(file=path)
         self.create_image(0, 0, image=self.image,anchor=NW)
         self.pack(side='top')
-
 
 
 

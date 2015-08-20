@@ -25,7 +25,7 @@ class Default(object):
     # # # #  done edits # # # #
 
     ALLOWED_EXTENSIONS = frozenset(['pdb', 'pds'])
-    ALLOWED_ARGS = frozenset(['bbRMSD', 'dEps', 'ddZScore',
+    ALLOWED_ARGS = frozenset(['bbRMSD', 'dEps', 'ddZScore', 'flag',
                               'matchIn', 'matchOut', 'phiEps', 'psiEps',
                               'query', 'rmsdCut', 'rmsdMode', 'seqOut', 'structOut',
                               'outType', 'target', 'targetList', 'topN', 'tune'])
