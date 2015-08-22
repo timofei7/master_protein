@@ -9,6 +9,7 @@ from pymol.wizard import Wizard
 from pymol import cmd
 from search_thread import *
 from logo_thread import *
+from Tkinter import *
 import os
 import subprocess
 import threading
@@ -38,6 +39,8 @@ class MasterSearch(Wizard):
         self.url = URL
         self.LOGOurl = LOGOURL
 
+        self.ref = Wizard
+
         # default values for sequence logo UI
         self.operations = []
         self.searches = []
@@ -48,6 +51,8 @@ class MasterSearch(Wizard):
 
         self.searchThread = None
         self.logoThread = None
+
+        self.launch_logo_search(1)
 
 
     def cleanup(self):
@@ -190,7 +195,7 @@ class MasterSearch(Wizard):
         select_operation_menu.append([1, 'show frequency logo', 'cmd.get_wizard().launch_logo_search(2)'])
         return select_operation_menu
 
-    #
+
     # def seq_show_thread(self, flag):
     #     # start_seq_logo_thread(cmd, self.search)
     #     search_action_id = self.search
@@ -248,6 +253,8 @@ class MasterSearch(Wizard):
         does some basic checking and gets selection
         """
 
+        display_logo(self.app, 'tmp0Mlmdy')
+
         if self.search is None:
             print 'please select target search'
             return
@@ -261,12 +268,11 @@ class MasterSearch(Wizard):
                 self.LOGOurl,
                 self.cmd)
             self.logoThread.start()
-
+            self.self.display_logo(self.app, self.dictionary[self.search])
 
     def stop_logo(self, message=''):
         if self.logoThread:
             self.logoThread.stop(message)
-
 
     def launch_search(self):
         """
@@ -309,6 +315,7 @@ def master_search(app):
     if not os.path.exists('cache/'):
         os.makedirs('cache/')
 
+
     wiz = MasterSearch(app)
     cmd.set_wizard(wiz)
 
@@ -329,3 +336,17 @@ except:
     def __init__(self):
         self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
                                  label='MASTER search', command=lambda s=self: master_search(s))
+
+def display_logo(app, query):
+
+    logo_filepath = 'cache/logos/'+str(query)+'.gif'
+
+    window = Toplevel(app.root)
+
+    image = PhotoImage(file = logo_filepath)
+    label = Label(window, image = image)
+
+    label.pack(side = "bottom", fill = "both", expand = "yes")
+
+    size = str(LOGO_GUI_WIDTH)+'x'+str(LOGO_GUI_HEIGHT)
+    window.geometry(size)

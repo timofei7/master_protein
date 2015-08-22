@@ -126,8 +126,6 @@ class LogoThread(threading.Thread):
                             logo_file.write(unencoded)
                             logo_file.close()
 
-                            self.display_logo(logo_filepath)
-
                 except Exception as e:
                     print('error processing response: ' + str(e.message) + "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
