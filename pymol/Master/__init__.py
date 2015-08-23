@@ -52,8 +52,20 @@ class MasterSearch(Wizard):
         self.searchThread = None
         self.logoThread = None
 
-        self.launch_logo_search(1)
+        self.makeLogo = 0
+        self.update()
 
+
+    def update(self):
+        """
+        Checks to see what needs to be updated in/by the Wizard, updates, and quits.
+        This could include opening a window to show the logo, updating the progress
+        bar of an ongoing search, displaying an error or other message from a search...
+        """
+        if (self.makeLogo != 0):
+          self.launch_logo_search(self.makeLogo)
+          self.makeLogo = 0
+        self.app.root.after(100, self.update)
 
     def cleanup(self):
         """
@@ -191,8 +203,8 @@ class MasterSearch(Wizard):
 
         #TODO: change launch show logo operation to my version
 
-        select_operation_menu.append([1, 'show sequence logo', 'cmd.get_wizard().launch_logo_search(1)'])
-        select_operation_menu.append([1, 'show frequency logo', 'cmd.get_wizard().launch_logo_search(2)'])
+        select_operation_menu.append([1, 'show sequence logo', 'cmd.get_wizard().makeLogo = 1'])
+        select_operation_menu.append([1, 'show frequency logo', 'cmd.get_wizard().makeLogo = 2'])
         return select_operation_menu
 
 
@@ -331,7 +343,7 @@ try:
 
     # add item to plugin menu
     def __init_plugin__(self):
-        addmenuitem('MASTER Search', lambda s=self : master_search(s))
+        addmenuitem('MASTER Search v0.1', lambda s=self : master_search(s))
 except:
     def __init__(self):
         self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
@@ -340,6 +352,9 @@ except:
 def display_logo(app, query):
 
     logo_filepath = 'cache/logos/'+str(query)+'.gif'
+
+#    print "thread:"
+#    print threading.current_thread()
 
     window = Toplevel(app.root)
 
