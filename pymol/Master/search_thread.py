@@ -27,7 +27,7 @@ class SearchThread(threading.Thread):
     """
 
     def __init__(
-            self, rmsd, num_struct, full_matches, pdbstrs, url, thecmd, dictionary):
+            self, wiz, rmsd, num_struct, full_matches, pdbstrs, url, thecmd, dictionary):
         """
         This is the constructor for our SearchThread.  Each time we perform
         a structural search, a new thread will be created.
@@ -41,6 +41,7 @@ class SearchThread(threading.Thread):
         self.full_matches   = full_matches
         self.query          = pdbstrs
         self.dictionary     = dictionary
+        self.wizard         = wiz
 
         # PyMOL routines keep their own copy of the 'cmd' object why?
         self.cmd = thecmd
@@ -62,9 +63,12 @@ class SearchThread(threading.Thread):
             jsondata = json.loads(streamdata)
             if 'progress' in jsondata:
                 progs = jsondata['progress'].strip()
-                print("processing: {0:.0%}".format(float(progs)))
+                #print("processing: {0:.0%}".format(float(progs)))
+                self.wizard.set_searchProgress(float(progs))
             elif 'error' in jsondata:
-                raise Exception(jsondata['error'])
+                #raise Exception(jsondata['error'])
+                self.wizard.set_errorMessage(jsondata['error'])
+                self.wizard.set_status('MASTER error')
             else:
                 self.databuffer.write(streamdata.strip())
                 # append to databuffer cause sometimes packets for results span multiple calls
@@ -114,34 +118,7 @@ class SearchThread(threading.Thread):
             # create a new unique ID
             self.match_id = self.new_group_name();
 
-            print("pdbs: " + str(self.query))
-            tmppath = 'cache/'+str(self.match_id)+'.tmp'
-
-            '''
-            parse query
-
-            '''
-
-            # write the pdbstr string into a tmp file created with the tmppath filename
-            tmp = open(tmppath, 'w+')
-            tmp.truncate()
-            tmp.write(str(self.query))
-            tmp.close()
-
-            # get sequence from pdbstr, which is in the temp file located at tmppath
-            parser = PDBParser(tmppath)
-            res = parser.getSequence()
-            seq = []
-
-            # print res
-            for residue in res:
-                tmpstr = ','.join(residue)
-                seq.append(tmpstr)
-            self.queryString = ' '.join(seq)
-            # print 'query string', self.queryString
-
-            # end of possibly un-needed code
-
+#            print("pdbs: " + str(self.query))
 
             # create data object, what kind of object is this?
             data = [
@@ -163,11 +140,6 @@ class SearchThread(threading.Thread):
                 try:
                     jsondata = json.loads(self.databuffer.getvalue())
                     if 'results' in jsondata:
-                        # self.match_id = jsondata['results'].strip()
-                        # create tmp file
-                        f = open('cache/'+str(self.match_id),'w+')
-                        f.write(self.queryString+'\n')
-                        f.write('-----------------\n')
                         if 'matches' in jsondata:
                             for index, match in enumerate(jsondata['matches']):
                                 # uncompress and decode matches
@@ -180,29 +152,15 @@ class SearchThread(threading.Thread):
                                 # load the pdb and group
                                 self.cmd.read_pdbstr(str(uncompressed), hid)
                                 self.cmd.group(self.match_id, hid)
-                                # clear tmp file
-                                tmp = open(tmppath, 'w+')
-                                tmp.truncate()
-                                tmp.write(str(uncompressed))
-                                tmp.close()
-                                # get sequence from pdbstr
-                                parser = PDBParser(tmppath)
-                                res = parser.getSequence()
-                                seq = []
-                                for residue in res:
-                                    seq.append(residue[0])
-                                # append seq to file
-                                f.write(''.join(seq)+'\n')
 
                             self.dictionary[self.match_id] = str(jsondata['tempdir']).split('/')[-1]
-                            os.remove(tmppath)
 
                     # add current search to search history
                     self.cmd.get_wizard().add_new_search(self.match_id)
-                    f.close()
                 except Exception as e:
                     print('error processing response: ' + e.message + "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
+                self.wizard.set_status('search complete')
 
         except Exception as e:
             # check for self.error as that would contain certain types of errors that weren't exceptions

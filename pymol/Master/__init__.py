@@ -29,7 +29,6 @@ class MasterSearch(Wizard):
 
         # Clean the slate
         self.cmd.unpick()
-        self.prompt = ['Make a selection and then hit search!']
         self.app = app
 
         # Default values
@@ -52,6 +51,9 @@ class MasterSearch(Wizard):
         self.searchThread = None
         self.logoThread = None
 
+        self.status = 'waiting for selection'
+        self.searchProgress = 0.0
+        self.errorMessage = ''
         self.makeLogo = 0
         self.update()
 
@@ -66,6 +68,26 @@ class MasterSearch(Wizard):
           self.launch_logo_search(self.makeLogo)
           self.makeLogo = 0
         self.app.root.after(100, self.update)
+
+    def set_searchProgress(self, progress):
+        """
+        Setter for search progress
+        """
+        self.searchProgress = progress
+        self.cmd.refresh_wizard()
+
+    def set_status(self, status):
+        """
+        Setter for status
+        """
+        self.status = status
+        self.cmd.refresh_wizard()
+
+    def set_errorMessage(self, mes):
+        """
+        Setter for error message
+        """
+        self.errorMessage = mes
 
     def cleanup(self):
         """
@@ -295,16 +317,14 @@ class MasterSearch(Wizard):
         # gets the active selections from pymol
         active_selections = cmd.get_names('selections', 1)
         if len(active_selections) == 0:
-            msg = 'must have an active selection!'
-            print(msg)
-            self.prompt = [msg]  # doesn't always work
+            self.status = 'no selection'
         else:
             print str(active_selections)
             selection = active_selections[0]
             pdbstr = cmd.get_pdbstr(selection)
             print 'pdbstr is', pdbstr
             self.stop_search()
-            self.searchThread = SearchThread(
+            self.searchThread = SearchThread(self,
                 self.rmsd_cutoff,
                 self.number_of_structures,
                 self.full_match,
@@ -313,11 +333,28 @@ class MasterSearch(Wizard):
                 self.cmd,
                 self.dictionary)
             self.searchThread.start()
+            self.status = 'search launched'
+            self.searchProgress = 0
+        self.cmd.refresh_wizard()
 
     def stop_search(self, message=''):
         if self.searchThread:
             self.searchThread.stop(message)
     
+
+    def get_prompt(self):
+        self.prompt = None
+        if (self.status == 'waiting for selection'):
+             self.prompt = [ 'Make a selection and then hit search...' ]
+        elif (self.status == 'search launched'):
+            self.prompt = [ 'Searching (%d%%)...' % round(100*self.searchProgress)  ]
+        elif (self.status == 'search complete'):
+            self.prompt = [ 'Search complete...' ]
+            self.status = 'waiting for selection'
+        elif (self.status == 'no selection'):
+            self.prompt = [ 'Error: must have an active selection!' ]
+            self.status = 'waiting for selection'
+        return self.prompt
 
 def master_search(app):
     """
