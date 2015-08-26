@@ -287,8 +287,6 @@ class MasterSearch(Wizard):
         does some basic checking and gets selection
         """
 
-        display_logo(self.app, 'tmp0Mlmdy')
-
         if self.search is None:
             print 'please select target search'
             return
@@ -302,7 +300,15 @@ class MasterSearch(Wizard):
                 self.LOGOurl,
                 self.cmd)
             self.logoThread.start()
-            self.self.display_logo(self.app, self.dictionary[self.search])
+            self.logoThread.join()
+
+            path = 'cache/'+str(self.search)
+            with open(path, 'r') as f:
+                residues = f.readline().strip()
+
+            query = self.dictionary[self.search]
+
+            display_logo(self.app, query, residues)
 
     def stop_logo(self, message=''):
         if self.logoThread:
@@ -386,19 +392,23 @@ except:
         self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
                                  label='MASTER search', command=lambda s=self: master_search(s))
 
-def display_logo(app, query):
+def display_logo(app, query, residues):
 
-    logo_filepath = 'cache/logos/'+str(query)+'.gif'
+    window = Toplevel(app.root)
 
 #    print "thread:"
 #    print threading.current_thread()
 
-    window = Toplevel(app.root)
 
-    image = PhotoImage(file = logo_filepath)
-    label = Label(window, image = image)
+    logo_filepath = "cache/logos/"+str(query)+".gif"
+    img = PhotoImage(file = logo_filepath)
 
-    label.pack(side = "bottom", fill = "both", expand = "yes")
+    canvas = Label(window)
+    canvas.pack()
+
+    canvas.configure(image=img)
 
     size = str(LOGO_GUI_WIDTH)+'x'+str(LOGO_GUI_HEIGHT)
     window.geometry(size)
+
+    window.mainloop()

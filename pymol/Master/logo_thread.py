@@ -146,16 +146,6 @@ class LogoThread(threading.Thread):
             finally:
                 self.concurrency_management['lock'].release()
 
-    def display_logo(self, logo_filepath):
-        root = Tk()
-
-        logo = LogoGUI(logo_filepath, 20, self.flag, root)
-        print logo_filepath
-
-        size = str(LOGO_GUI_WIDTH)+'x'+str(LOGO_GUI_HEIGHT)
-        root.geometry(size)
-        root.mainloop()
-
     def stop(self, message=''):
         """
         abort abort!
