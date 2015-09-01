@@ -308,7 +308,7 @@ class MasterSearch(Wizard):
 
             query = self.dictionary[self.search]
 
-            display_logo(self.app, query, residues)
+            display_logo(self.app, query, residues, self.search)
 
     def stop_logo(self, message=''):
         if self.logoThread:
@@ -325,8 +325,9 @@ class MasterSearch(Wizard):
         if len(active_selections) == 0:
             self.status = 'no selection'
         else:
-            print str(active_selections)
+
             selection = active_selections[0]
+            print "The active selections are" + str(selection)
             pdbstr = cmd.get_pdbstr(selection)
             print 'pdbstr is', pdbstr
             self.stop_search()
@@ -392,23 +393,81 @@ except:
         self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
                                  label='MASTER search', command=lambda s=self: master_search(s))
 
-def display_logo(app, query, residues):
+def display_logo(app, query, residues, search_id):
 
     window = Toplevel(app.root)
-
 #    print "thread:"
 #    print threading.current_thread()
-
 
     logo_filepath = "cache/logos/"+str(query)+".gif"
     img = PhotoImage(file = logo_filepath)
 
     canvas = Label(window)
-    canvas.pack()
-
     canvas.configure(image=img)
+    canvas.pack(expand = YES, side = 'top')
 
-    size = str(LOGO_GUI_WIDTH)+'x'+str(LOGO_GUI_HEIGHT)
-    window.geometry(size)
+    # parse query
+    residues_str = residues.split()
+    residue_list = []
+    for residue_str in residues_str:
+        residue = residue_str.split(',')
+        residue_list.append(residue)
+
+    for i in range(0, len(residue_list)):
+        label = ResidueLabel(window, residue = residue_list[i], position = i, textSize = 20, search_id = search_id)
+        label.pack(side = 'left')
+        #label.pack(fill = X, side='bottom')
 
     window.mainloop()
+
+
+class ResidueLabel(Label):
+    '''
+    Label with action listeners implemented
+    '''
+    def __init__(self, master, residue, position, textSize, search_id):
+        Label.__init__(self, master)
+        self.position = position
+        self.residue = residue
+        self.textSize = textSize
+        self.search_id = search_id
+        self.config(width = LOGO_BAR_WIDTH)
+
+        # bind events
+        def enter_event(event):
+            self.config(bg = "green")
+        def leave_event(event):
+            self.config(bg = "white")
+        def click_one_event(event):
+            print 'click search '+self.search_id+' chain '+self.residue[1]+' num '+self.residue[2]
+            cmd.select("resi" + str(self.position), ("chain " + self.residue[1] + " and resi " +self.residue[2]))
+            sys.stdout.flush()
+
+        self.config(text = str(self.residue[0]))
+        self.config(bg="white")
+        self.bind("<Enter>", enter_event)
+        self.bind("<Leave>", leave_event)
+        self.bind("<Button-1>", click_one_event)
+
+class Example(Label):
+    def __init__(self, master, image_filepath):
+        Label.__init__(self, master)
+
+        self.image = PhotoImage(image_filepath)
+
+        self.image_file = Image.open(image_filepath)
+        self.image_copy = self.image_file.copy()
+
+        self.configure(image = self.image)
+        self.background.pack(fill=BOTH, expand=YES)
+        self.background.bind('<Configure>', self._resize_image)
+
+    def _resize_image(self,event):
+
+        new_width = event.width
+        new_height = event.height
+
+        self.image = self.img_copy.resize((new_width, new_height))
+
+        self.background_image = PhotoImage(self.image)
+        self.background.configure(image =  self.background_image)

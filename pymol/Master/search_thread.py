@@ -118,7 +118,26 @@ class SearchThread(threading.Thread):
             # create a new unique ID
             self.match_id = self.new_group_name();
 
-#            print("pdbs: " + str(self.query))
+            # store query data
+            tmppath = 'cache/'+str(self.match_id)
+            tmp = open(tmppath, 'w+')
+            tmp.write(str(self.query))
+            tmp.close()
+
+            # get sequence from pdbstr
+            parser = PDBParser(tmppath)
+            res = parser.getSequence()
+            seq = []
+
+            # separate residue information
+            for residue in res:
+                tmpstr = ','.join(residue)
+                seq.append(tmpstr)
+            self.queryString = ' '.join(seq)
+
+            f = open(tmppath, 'w+')
+            f.write(self.queryString+'\n')
+            f.close()
 
             # create data object, what kind of object is this?
             data = [

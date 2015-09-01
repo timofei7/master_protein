@@ -46,6 +46,7 @@ class ResidueLabel(Label):
         self.bind("<Leave>", leave_event)
         self.bind("<Button-1>", click_one_event)
 
+
 class LogoGUI(Frame):
     '''
     create a logo GUI frame
