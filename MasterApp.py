@@ -11,7 +11,6 @@ from flask import Response
 import json
 import time
 from MasterSearch import *
-from MasterLogo import *
 import zlib
 import base64
 import re
@@ -22,7 +21,6 @@ app = Flask(__name__)
 app.debug = True
 app.config.from_object('Settings.Default')
 masterSearch = MasterSearch(app)
-masterLogo = MasterLogo(app)
 
 import Checks
 Checks.app = app
