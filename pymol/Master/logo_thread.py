@@ -10,15 +10,10 @@ author: Nick Fiacco, 6/2015
 
 import threading
 import json
-from Tkinter import *
-import zlib
 import pycurl
 import base64
 from StringIO import StringIO
 import traceback
-from util import *
-import os
-from gui import *
 
 class LogoThread(threading.Thread):
     """
@@ -92,15 +87,9 @@ class LogoThread(threading.Thread):
             self.conn.setopt(pycurl.TIMEOUT, 1200)
             self.conn.setopt(pycurl.NOSIGNAL, 1)
 
-
-            # create data object, what kind of object is this?
-
-            #("flag", str(self.flag)),
-            #("rmsdCut", str(self.rmsd_cutoff))
-
             data = [
                 ('query', self.query),
-                ('flag', "1"),
+                ('flag', str(self.flag)),
                 ('rmsdCut', "999")
             ]
             self.conn.setopt(pycurl.HTTPPOST, data)

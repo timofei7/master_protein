@@ -112,20 +112,20 @@ def logo_gen():
 
     sanitized = Checks.sanitize_args(request.form)
     search_id = str(sanitized['query'])
-#    search_id = "tmpWKCM67"
+    flag = int(sanitized['flag'])
 
     tempdir = os.path.join(app.config['PROCESSING_PATH'], search_id)
     image_filepath = os.path.join(tempdir, 'logo.png')
     seq_filepath = os.path.join(tempdir, 'seq')
 
-#    image_file = open(image_filepath, 'w+')
-#    image_file.close()
+    if flag == 1:
+        arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -B 1 -c 999 -o " + str(image_filepath) + " -t -1"
+    elif flag == 2:
+        arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -B 1 -c 999 -o " + str(image_filepath) + " -t -1 -F"
 
-    arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -B 1 -c 999 -o " + str(image_filepath) + " -t -1"
     args = shlex.split(arg_string)
 
     subprocess.call(args, stdout=subprocess.PIPE)
- #   p.communicate()
     
     gif_filepath = os.path.join(tempdir, 'logo.gif')
     convert_string = "convert " + image_filepath + " " + gif_filepath

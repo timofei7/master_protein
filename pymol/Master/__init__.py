@@ -66,7 +66,7 @@ class MasterSearch(Wizard):
         """
         if (self.makeLogo != 0):
           self.launch_logo_search(self.makeLogo)
-          self.makeLogo = 0
+
         self.app.root.after(100, self.update)
 
     def set_searchProgress(self, progress):
@@ -96,6 +96,9 @@ class MasterSearch(Wizard):
         """
         self.stop_search()
 
+    def logo_helper(self, flag):
+        self.makeLogo = flag
+
 
     def get_panel(self):
         """
@@ -112,9 +115,7 @@ class MasterSearch(Wizard):
         sets up the menu ui for sequence logo
         '''
         select_search_menu = self.create_select_search_menu()
-        select_operation_menu = self.create_select_operation_menu()
         self.menu['searches'] = select_search_menu
-        self.menu['operations'] = select_operation_menu
 
         # num is the type of display  1 is title only, 2 is button, 3 is dropdown
         return [
@@ -124,10 +125,9 @@ class MasterSearch(Wizard):
             [3, 'Full Matches: ' + ['No', 'Yes'][self.full_match], 'full_matches'],
             [2, 'Search', 'cmd.get_wizard().launch_search()'],
             [1, 'Sequence Logo', ''],
-            [3, 'select search: ' + str(self.search), 'searches'],
-            [3, 'select operation: ', 'operations'],
-            # [2, 'Execute', 'cmd.get_wizard().launch_operation()'],
-            [2, 'Done', 'cmd.set_wizard()']]
+            [3, 'Select Search: ' + str(self.search), 'searches'],
+            [2, 'Show Sequence Logo', 'cmd.get_wizard().logo_helper(1)'],
+            [2, 'Show Frequency Logo', 'cmd.get_wizard().logo_helper(2)']]
 
 
     def set_rmsd(self, rmsd):
@@ -214,71 +214,8 @@ class MasterSearch(Wizard):
 
 
     def set_search(self, i):
-        # print 'set search with id: '+self.searches[int(i)]
         self.search = self.searches[int(i)]
         self.cmd.refresh_wizard()
-
-
-    def create_select_operation_menu(self):
-        select_operation_menu = []
-        select_operation_menu.append([2, 'Operation', ''])
-
-        #TODO: change launch show logo operation to my version
-
-        select_operation_menu.append([1, 'show sequence logo', 'cmd.get_wizard().makeLogo = 1'])
-        select_operation_menu.append([1, 'show frequency logo', 'cmd.get_wizard().makeLogo = 2'])
-        return select_operation_menu
-
-
-    # def seq_show_thread(self, flag):
-    #     # start_seq_logo_thread(cmd, self.search)
-    #     search_action_id = self.search
-    #     stm = ''
-    #
-    #     search_id = str(search_action_id)
-    #     flag = str(flag)
-    #
-    #     p = subprocess.Popen(["python", os.path.dirname(os.path.realpath(__file__)) + '/logo_script.py', str(search_action_id), str(flag)], stdout=subprocess.PIPE, bufsize=1)
-    #
-    #     out, err = p.communicate()
-    #     print out
-    #
-    #     while True:
-    #         # print "Looping"
-    #         line = p.stdout.readline()
-    #         if not line:
-    #             break
-    #         if 'click' not in line:
-    #             continue
-    #         line = line.strip()
-    #         toks = line.split()
-    #         chain = str(toks[4])
-    #         num = str(toks[6])
-    #         if stm != '':
-    #             stm += ', '
-    #         stm += 'chain '+chain+' and resi '+num
-    #         # print stm
-    #         # print 'highlight chain ',chain, 'num ',num
-    #         self.cmd.select(search_action_id+'sele', stm)
-    #         '''
-    #         highlight selected residue
-    #         '''
-    #         sys.stdout.flush()
-    #
-    #     # clear cache data
-    #     if os.path.exists(CACHE_PATH+search_action_id):
-    #         print 'clean up for search ',search_action_id
-    #         shutil.rmtree(CACHE_PATH+search_action_id)
-
-    #
-    # def launch_show_logo_operation(self, flag):
-    #     # flag used as indicator for Sequence or Frequency logo
-    #     if self.search is None:
-    #         print 'please select target search'
-    #         return
-    #     # start a new thread
-    #     thread = threading.Thread(target = self.seq_show_thread, args=[flag])
-    #     thread.start()
 
 
     def launch_logo_search(self, flag):
@@ -292,6 +229,8 @@ class MasterSearch(Wizard):
             return
 
         else:
+            self.status = 'logo request launched'
+            self.cmd.refresh_wizard()
             print str(self.dictionary[self.search])
             self.logoThread = LogoThread(
                 self.rmsd_cutoff,
@@ -302,13 +241,16 @@ class MasterSearch(Wizard):
             self.logoThread.start()
             self.logoThread.join()
 
+            self.status = 'logo request finished'
+            self.cmd.refresh_wizard()
             path = 'cache/'+str(self.search)
             with open(path, 'r') as f:
                 residues = f.readline().strip()
 
             query = self.dictionary[self.search]
-
+            self.makeLogo = 0
             display_logo(self.app, query, residues, self.search)
+
 
     def stop_logo(self, message=''):
         if self.logoThread:
@@ -353,6 +295,11 @@ class MasterSearch(Wizard):
         self.prompt = None
         if (self.status == 'waiting for selection'):
              self.prompt = [ 'Make a selection and then hit search...' ]
+        elif (self.status == 'logo request launched'):
+            self.prompt = [ 'Launched logo generation' ]
+        elif (self.status == 'logo request finished'):
+            self.prompt = [ 'Received logo from server' ]
+            self.status = [ 'waiting for selection' ]
         elif (self.status == 'search launched'):
             self.prompt = [ 'Searching (%d%%)...' % round(100*self.searchProgress)  ]
         elif (self.status == 'search complete'):
@@ -396,8 +343,6 @@ except:
 def display_logo(app, query, residues, search_id):
 
     window = Toplevel(app.root)
-#    print "thread:"
-#    print threading.current_thread()
 
     logo_filepath = "cache/logos/"+str(query)+".gif"
     img = PhotoImage(file = logo_filepath)
@@ -418,6 +363,7 @@ def display_logo(app, query, residues, search_id):
         label.pack(side = 'left')
         #label.pack(fill = X, side='bottom')
 
+    window.after(100, cmd.get_wizard().update())
     window.mainloop()
 
 
