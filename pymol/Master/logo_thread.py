@@ -103,11 +103,9 @@ class LogoThread(threading.Thread):
                 # once we're done check the stringbuffer for the complete json matches
                 try:
                     jsondata = json.loads(self.databuffer.getvalue())
-                    print "123"
                     if 'results' in jsondata:
 
                         if 'logo' in jsondata:
-                            print "hello"
                             unencoded = base64.standard_b64decode(jsondata['logo'])
 
                             logo_filepath = 'cache/logos/'+str(self.query)+'.gif'

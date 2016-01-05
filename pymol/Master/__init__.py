@@ -226,12 +226,13 @@ class MasterSearch(Wizard):
 
         if self.search is None:
             print 'please select target search'
+            self.makeLogo = 0
             return
 
         else:
             self.status = 'logo request launched'
             self.cmd.refresh_wizard()
-            print str(self.dictionary[self.search])
+
             self.logoThread = LogoThread(
                 self.rmsd_cutoff,
                 self.dictionary[self.search],
@@ -395,18 +396,6 @@ class ResidueLabel(Label):
         self.bind("<Leave>", leave_event)
         self.bind("<Button-1>", click_one_event)
 
-class Example(Label):
-    def __init__(self, master, image_filepath):
-        Label.__init__(self, master)
-
-        self.image = PhotoImage(image_filepath)
-
-        self.image_file = Image.open(image_filepath)
-        self.image_copy = self.image_file.copy()
-
-        self.configure(image = self.image)
-        self.background.pack(fill=BOTH, expand=YES)
-        self.background.bind('<Configure>', self._resize_image)
 
     def _resize_image(self,event):
 
