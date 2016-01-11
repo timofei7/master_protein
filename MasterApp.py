@@ -121,7 +121,7 @@ def logo_gen():
     if flag == 1:
         arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -c 999 -o " + str(image_filepath) + " -t -1"
     elif flag == 2:
-        arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -c 999 -o " + str(image_filepath) + " -t -1 -F3"
+        arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -c 999 -o " + str(image_filepath) + " -t -1 -F"
 
     args = shlex.split(arg_string)
 
