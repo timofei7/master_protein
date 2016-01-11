@@ -7,16 +7,12 @@ author:   Tim Tregubov, 12/2014
 
 from pymol.wizard import Wizard
 from pymol import cmd
+import math
 from search_thread import *
 from logo_thread import *
 from Tkinter import *
-import os
-import subprocess
-import threading
-import shutil
 from constants import *
 
-# URL = "http://127.0.0.1:5000/api/search"
 URL = "http://ararat.cs.dartmouth.edu:5001/api/search"
 LOGOURL = "http://ararat.cs.dartmouth.edu:5001/api/logo"
 
@@ -345,12 +341,14 @@ def display_logo(app, query, residues, search_id):
 
     window = Toplevel(app.root)
 
-    logo_filepath = "cache/logos/"+str(query)+".gif"
+    logo_filepath = "cache/logos/"+str(query)+"1.gif"
     img = PhotoImage(file = logo_filepath)
 
-    canvas = Label(window)
-    canvas.configure(image=img)
-    canvas.pack(expand = YES, side = 'top')
+    logo = Label(window, image=img)
+    logo.photo = img;
+    logo.pack(fill = BOTH, expand = 1, side = 'top')
+
+    window.update()
 
     # parse query
     residues_str = residues.split()
@@ -359,16 +357,48 @@ def display_logo(app, query, residues, search_id):
         residue = residue_str.split(',')
         residue_list.append(residue)
 
-    for i in range(0, len(residue_list)):
-        label = ResidueLabel(window, residue = residue_list[i], position = i, textSize = 20, search_id = search_id)
-        label.pack(side = 'left')
-        #label.pack(fill = X, side='bottom')
+    label_list = []
+
+    total_num_residues = len(residue_list)
+    button_width = logo.winfo_width() / total_num_residues
+
+    for i in range(0, total_num_residues):
+
+        button_container = Frame(window, width = button_width, height = BUTTON_HEIGHT)
+        button_container.pack(side = 'left', fill = BOTH, expand = 1)
+        button_container.pack_propagate(0)
+
+        label = ResidueButton(button_container, residue = residue_list[i], position = i, textSize = 20, search_id = search_id)
+        label.pack(side = 'left', fill = BOTH, expand = 1)
+        label_list.append(label)
+
+    def leave_event(event):
+        for residue_label in label_list:
+            residue_label.leave_event(None)
+
+    def highlight(event):
+        residue_num = int(math.ceil((event.x-60) / 110))
+        for residue_label in label_list:
+            residue_label.leave_event(None)
+        if(residue_num < len(residue_list) and residue_num >= 0):
+            label_list[residue_num].enter_event(None)
+
+    def callback(event):
+        residue_num = int(math.ceil((event.x-60) / 110))
+        if(residue_num < len(residue_list) and residue_num >= 0):
+            cmd.select("resi" + str(residue_num), ("chain " + residue_list[residue_num][1] + " and resi " +residue_list[residue_num][2]))
+            print "resi" + str(residue_num), ("chain " + residue_list[residue_num][1] + " and resi " +residue_list[residue_num][2])
+            label_list[residue_num].enter_event(None)
+
+    logo.bind("<Button-1>", callback);
+    logo.bind('<Motion>', highlight)
+    logo.bind('<Leave>', leave_event)
 
     window.after(100, cmd.get_wizard().update())
     window.mainloop()
 
 
-class ResidueLabel(Label):
+class ResidueButton(Label):
     '''
     Label with action listeners implemented
     '''
@@ -378,13 +408,7 @@ class ResidueLabel(Label):
         self.residue = residue
         self.textSize = textSize
         self.search_id = search_id
-        self.config(width = LOGO_BAR_WIDTH)
 
-        # bind events
-        def enter_event(event):
-            self.config(bg = "green")
-        def leave_event(event):
-            self.config(bg = "white")
         def click_one_event(event):
             print 'click search '+self.search_id+' chain '+self.residue[1]+' num '+self.residue[2]
             cmd.select("resi" + str(self.position), ("chain " + self.residue[1] + " and resi " +self.residue[2]))
@@ -392,17 +416,13 @@ class ResidueLabel(Label):
 
         self.config(text = str(self.residue[0]))
         self.config(bg="white")
-        self.bind("<Enter>", enter_event)
-        self.bind("<Leave>", leave_event)
+
+        self.bind("<Enter>", self.enter_event)
+        self.bind("<Leave>", self.leave_event)
         self.bind("<Button-1>", click_one_event)
 
-
-    def _resize_image(self,event):
-
-        new_width = event.width
-        new_height = event.height
-
-        self.image = self.img_copy.resize((new_width, new_height))
-
-        self.background_image = PhotoImage(self.image)
-        self.background.configure(image =  self.background_image)
+            # bind events
+    def enter_event(self, event):
+        self.config(bg = "green")
+    def leave_event(self, event):
+        self.config(bg = "white")

@@ -119,9 +119,9 @@ def logo_gen():
     seq_filepath = os.path.join(tempdir, 'seq')
 
     if flag == 1:
-        arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -B 1 -c 999 -o " + str(image_filepath) + " -t -1"
+        arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -c 999 -o " + str(image_filepath) + " -t -1"
     elif flag == 2:
-        arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -B 1 -c 999 -o " + str(image_filepath) + " -t -1 -F"
+        arg_string = "perl -w /home/grigoryanlab/library/MaDCaT/scripts/seqAnal.pl -s " + str(seq_filepath) + " -c 999 -o " + str(image_filepath) + " -t -1 -F3"
 
     args = shlex.split(arg_string)
 

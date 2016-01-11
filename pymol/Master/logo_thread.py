@@ -108,7 +108,7 @@ class LogoThread(threading.Thread):
                         if 'logo' in jsondata:
                             unencoded = base64.standard_b64decode(jsondata['logo'])
 
-                            logo_filepath = 'cache/logos/'+str(self.query)+'.gif'
+                            logo_filepath = 'cache/logos/'+str(self.query)+'1.gif'
                             logo_file = open(logo_filepath, 'wb')
                             logo_file.write(unencoded)
                             logo_file.close()
