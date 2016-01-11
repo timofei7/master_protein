@@ -240,13 +240,13 @@ class MasterSearch(Wizard):
 
             self.status = 'logo request finished'
             self.cmd.refresh_wizard()
-            path = 'cache/'+str(self.search)
+            path = SEARCH_CACHE + str(self.search)
             with open(path, 'r') as f:
                 residues = f.readline().strip()
 
             query = self.dictionary[self.search]
             self.makeLogo = 0
-            display_logo(self.app, query, residues, self.search)
+            display_logo(self.app, query, residues, self.search, flag)
 
 
     def stop_logo(self, message=''):
@@ -311,10 +311,16 @@ def master_search(app):
     """
     MASTER search
     """
-    # create a folder for storing temporary data
-    if not os.path.exists('cache/'):
-        os.makedirs('cache/')
 
+    # create a folder for storing temporary data
+    if not os.path.exists(MAIN_CACHE):
+        os.makedirs(MAIN_CACHE)
+
+    if not os.path.exists(SEARCH_CACHE):
+        os.makedirs(SEARCH_CACHE)
+
+    if not os.path.exists(LOGO_CACHE):
+        os.makedirs(LOGO_CACHE)
 
     wiz = MasterSearch(app)
     cmd.set_wizard(wiz)
@@ -337,11 +343,15 @@ except:
         self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
                                  label='MASTER search', command=lambda s=self: master_search(s))
 
-def display_logo(app, query, residues, search_id):
+def display_logo(app, query, residues, search_id, flag):
 
     window = Toplevel(app.root)
 
-    logo_filepath = "cache/logos/"+str(query)+"1.gif"
+    if flag == 1:
+        logo_filepath = LOGO_CACHE + str(query)+"s.gif"
+    elif flag == 2:
+        logo_filepath = LOGO_CACHE + str(query)+"f.gif"
+
     img = PhotoImage(file = logo_filepath)
 
     logo = Label(window, image=img)

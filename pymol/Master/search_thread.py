@@ -18,7 +18,7 @@ import base64
 from StringIO import StringIO
 import traceback
 from util import *
-import os
+from constants import *
 
 
 class SearchThread(threading.Thread):
@@ -119,7 +119,7 @@ class SearchThread(threading.Thread):
             self.match_id = self.new_group_name();
 
             # store query data
-            tmppath = 'cache/'+str(self.match_id)
+            tmppath = SEARCH_CACHE + str(self.match_id)
             tmp = open(tmppath, 'w+')
             tmp.write(str(self.query))
             tmp.close()
@@ -176,6 +176,7 @@ class SearchThread(threading.Thread):
 
                     # add current search to search history
                     self.cmd.get_wizard().add_new_search(self.match_id)
+
                 except Exception as e:
                     print('error processing response: ' + e.message + "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
