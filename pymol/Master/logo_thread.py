@@ -4,7 +4,7 @@ logo thread for the pymol master plugin
 uses pycurl to connect to a remote server
 and requests sequence logo
 
-author: Nick Fiacco, 6/2015
+author: Nick Fiacco, 6/2015, using structure of search_thread.py from Tim Tregubov
 """
 
 

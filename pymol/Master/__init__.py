@@ -123,7 +123,8 @@ class MasterSearch(Wizard):
             [1, 'Sequence Logo', ''],
             [3, 'Select Search: ' + str(self.search), 'searches'],
             [2, 'Show Sequence Logo', 'cmd.get_wizard().logo_helper(1)'],
-            [2, 'Show Frequency Logo', 'cmd.get_wizard().logo_helper(2)']]
+            [2, 'Show Frequency Logo', 'cmd.get_wizard().logo_helper(2)'],
+            [2, 'Exit', 'cmd.set_wizard()']]
 
 
     def set_rmsd(self, rmsd):
@@ -371,6 +372,7 @@ def display_logo(app, query, residues, search_id, flag):
 
     total_num_residues = len(residue_list)
     button_width = logo.winfo_width() / total_num_residues
+    cmd.select("curPos", "none")
 
     for i in range(0, total_num_residues):
 
@@ -418,20 +420,28 @@ class ResidueButton(Label):
         self.residue = residue
         self.textSize = textSize
         self.search_id = search_id
-
-        def click_one_event(event):
-            print 'click search '+self.search_id+' chain '+self.residue[1]+' num '+self.residue[2]
-            cmd.select("resi" + str(self.position), ("chain " + self.residue[1] + " and resi " +self.residue[2]))
-            sys.stdout.flush()
+        self.selected = False
 
         self.config(text = str(self.residue[0]))
         self.config(bg="white")
 
+        # bind events
         self.bind("<Enter>", self.enter_event)
         self.bind("<Leave>", self.leave_event)
-        self.bind("<Button-1>", click_one_event)
+        self.bind("<Button-1>", self.click_one_event)
 
-            # bind events
+
+    def click_one_event(self, event):
+            print 'click search '+self.search_id+' chain '+self.residue[1]+' num '+self.residue[2]
+            if self.selected:
+                cmd.select("curPos", "curPos and not (chain " + self.residue[1] + " and resi " +self.residue[2] + ")")
+                self.selected = False
+            else:
+                cmd.select("curPos", "curPos or (chain " + self.residue[1] + " and resi " +self.residue[2] + ")")
+                self.selected = True
+            sys.stdout.flush()
+
+
     def enter_event(self, event):
         self.config(bg = "green")
     def leave_event(self, event):

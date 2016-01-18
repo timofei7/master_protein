@@ -168,6 +168,7 @@ class SearchThread(threading.Thread):
                                 phid = re.search('/(.*?).pds', header).group(1).split('/')
                                 hid = phid[len(phid)-1] + '.' + str(index)
                                 print('found: ' + hid + ' ' + header.split('pds')[1])
+
                                 # load the pdb and group
                                 self.cmd.read_pdbstr(str(uncompressed), hid)
                                 self.cmd.group(self.match_id, hid)
