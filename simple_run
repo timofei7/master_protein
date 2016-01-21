@@ -10,7 +10,7 @@ kill `cat /tmp/rqworker3.pid`
 rqworker --pid /tmp/rqworker1.pid &
 rqworker --pid /tmp/rqworker2.pid &
 rqworker --pid /tmp/rqworker3.pid &
-./MasterApp.py
+./MasterApp.py 
 kill `cat /tmp/rqworker1.pid`
 kill `cat /tmp/rqworker2.pid`
 kill `cat /tmp/rqworker3.pid`
