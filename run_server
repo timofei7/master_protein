@@ -1,13 +1,14 @@
 #!/bin/bash
 #
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-mkdir processing 2>&1 >/dev/null
+mkdir -p processing 2>&1 >/dev/null
 
 $DIR/kill_server
-rqworker --pid /tmp/rqworker1.pid &
-rqworker --pid /tmp/rqworker2.pid &
-rqworker --pid /tmp/rqworker3.pid &
-rqworker --pid /tmp/rqworker4.pid &
-rqworker --pid /tmp/rqworker5.pid &
-rqworker --pid /tmp/rqworker6.pid &
-gunicorn --pid /tmp/gunicorn.pid --daemon -w 6 --graceful-timeout 1200 --timeout 1200 -b 0.0.0.0:5000 MasterApp:app
+redis-server &
+rqworker --pid /tmp/Nrqworker1.pid &
+rqworker --pid /tmp/Nrqworker2.pid &
+rqworker --pid /tmp/Nrqworker3.pid &
+rqworker --pid /tmp/Nrqworker4.pid &
+rqworker --pid /tmp/Nrqworker5.pid &
+rqworker --pid /tmp/Nrqworker6.pid &
+gunicorn --pid /tmp/Ngunicorn.pid --daemon -w 6 --graceful-timeout 1200 --timeout 1200 -b 0.0.0.0:5001 MasterApp:app
