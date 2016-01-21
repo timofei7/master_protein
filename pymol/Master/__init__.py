@@ -40,6 +40,7 @@ class MasterSearch(Wizard):
         self.operations = []
         self.searches = []
         self.database = DATABASE_FULL
+        self.database_name = "Full"
         self.search = None # current search action
         self.operation = None # current operation
 
@@ -122,7 +123,7 @@ class MasterSearch(Wizard):
             [3, 'RMSD Cutoff: ' + str(self.rmsd_cutoff) + ' Angstroms', 'rmsd'],
             [3, 'Max Matches: ' + str(self.number_of_structures) + ' results', 'num_structures'],
             [3, 'Full Matches: ' + ['No', 'Yes'][self.full_match], 'full_matches'],
-            [3, 'Database: ' + str(self.database), 'database'],
+            [3, 'Database: ' + self.database_name, 'database'],
             [2, 'Search', 'cmd.get_wizard().launch_search()'],
             [1, 'Sequence Logo', ''],
             [3, 'Select Search: ' + str(self.search), 'searches'],
@@ -140,12 +141,17 @@ class MasterSearch(Wizard):
         self.cmd.refresh_wizard()
 
 
-    def set_database(self, database):
+    def set_mdatabase(self, database):
         """
         This is the method that will be called once the user has
         selected an database via the wizard menu.
         """
-        self.database = database
+        if(database == "Full"):
+            self.database = DATABASE_FULL
+            self.database_name = "Full"
+        elif(database == "Test"):
+            self.database = DATABASE_TEST
+            self.database_name = "Test"
         self.cmd.refresh_wizard()
 
 
@@ -188,8 +194,11 @@ class MasterSearch(Wizard):
         This method will create a wizard menu for the database to run the search with
         """
         database_menu = [[2, 'Database', '']]
-        database_menu.append([1, "Full Database", 'cmd.get_wizard().set_database(' + str(DATABASE_FULL) + ')'])
-        database_menu.append([1, "Test Database", 'cmd.get_wizard().set_database(' + str(DATABASE_TEST) + ')'])
+        database_menu.append([1, "Full Database", 'cmd.get_wizard().set_mdatabase("Full")'])
+        database_menu.append([1, "Test Database", 'cmd.get_wizard().set_mdatabase("Test")'])
+
+        #database_menu.append([1, "Full Database", 'print "full"'])
+        #database_menu.append([1, "Test Database", 'print "test"'])
 
         return database_menu
 

@@ -20,6 +20,8 @@ def search(cmd, basedir, tempdir, db_size):
     progressfile = open(progressfile_path, "w+")
     fileid = os.path.basename(os.path.normpath(tempdir)).strip()
 
+    print cmd[4]
+
     tardir = os.path.join(basedir, '../compressed/')
     if not os.path.exists(tardir):
         os.makedirs(tardir)
@@ -56,7 +58,7 @@ def search(cmd, basedir, tempdir, db_size):
 
     # compress the resultsdir
     compress_cmd = ['/usr/bin/tar', '-cf', os.path.join(tardir, tarname), os.path.join(basedir, fileid)]
-    print compress_cmd
+
 #    compress_cmd = ['/usr/bin/tar', '-C', basedir, '-czf', os.path.join(basedir, tarname), fileid]
     compress_process = subprocess.Popen(compress_cmd,
                                         stdout=subprocess.PIPE,

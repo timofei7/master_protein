@@ -130,7 +130,6 @@ class MasterSearch(object):
           cmd.append('--bbRMSD')
 
         self.db_size = sum(1 for line in open(os.path.join(self.app.config['CONFIG_PATH'], database)) if line.rstrip())
-        print os.path.join(self.app.config['CONFIG_PATH'], database)
         job = self.rq.enqueue_call(Tasks.search, args=(cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size), timeout=3600)
 
         return job
