@@ -398,9 +398,8 @@ def display_logo(app, query, residues, search_id, flag):
     def callback(event):
         residue_num = int(math.ceil((event.x-60) / 110))
         if(residue_num < len(residue_list) and residue_num >= 0):
-            cmd.select("resi" + str(residue_num), ("chain " + residue_list[residue_num][1] + " and resi " +residue_list[residue_num][2]))
-            print "resi" + str(residue_num), ("chain " + residue_list[residue_num][1] + " and resi " +residue_list[residue_num][2])
             label_list[residue_num].enter_event(None)
+            label_list[residue_num].click_one_event(None)
 
     logo.bind("<Button-1>", callback);
     logo.bind('<Motion>', highlight)

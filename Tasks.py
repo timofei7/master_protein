@@ -19,6 +19,10 @@ def search(cmd, basedir, tempdir, db_size):
     progressfile_path = os.path.join(tempdir, 'progress')
     progressfile = open(progressfile_path, "w+")
     fileid = os.path.basename(os.path.normpath(tempdir)).strip()
+
+    tardir = os.path.join(basedir, 'compressed/')
+    if not os.path.exists(tardir):
+        os.makedirs(tardir)
     tarname = fileid+".tar.gz"
 
     process = subprocess.Popen(cmd,
@@ -51,13 +55,14 @@ def search(cmd, basedir, tempdir, db_size):
     err += process.stderr.readlines()  # append any stderr to stdout "Errors"
 
     # compress the resultsdir
-    compress_cmd = ['/usr/bin/tar', '-C', basedir, '-cf', fileid, ' | grep --best --quiet > ', os.path.join(basedir, tarname)]
+    compress_cmd = ['/usr/bin/tar', '-C', tardir, '-cf', tarname, os.path.join(basedir, fileid)]
 #    compress_cmd = ['/usr/bin/tar', '-C', basedir, '-czf', os.path.join(basedir, tarname), fileid]
     compress_process = subprocess.Popen(compress_cmd,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,
                                         stdin=subprocess.PIPE)
     c_out, c_err = compress_process.communicate()
+
     if c_err and not re.search('Removing', c_err):
         err.append(str(c_err))
 
