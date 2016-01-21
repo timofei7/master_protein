@@ -43,11 +43,11 @@ class MasterSearch(object):
         sets up some initial parameters and a redis queue and connection
         """
 
-        #self.db_size = sum(1 for line in open(app.config['TARGET_LIST_PATH']) if line.rstrip())
+        self.db_size = sum(1 for line in open(app.config['TARGET_LIST_PATH']) if line.rstrip())
         self.app = app
         self.redis_conn = Redis()
         self.rq = Queue(connection=self.redis_conn)
-        #print('init with db size: ' + str(self.db_size))
+        print('init with db size: ' + str(self.db_size))
 
     def process(self, query_file, database, arguments):
         """
@@ -129,8 +129,9 @@ class MasterSearch(object):
         if 'bbRMSD' in arguments:
           cmd.append('--bbRMSD')
 
-        db_size = sum(1 for line in open(os.path.join(self.app.config['CONFIG_PATH'], database)) if line.rstrip())
-        job = self.rq.enqueue_call(Tasks.search, args=(cmd, self.app.config['PROCESSING_PATH'], tempdir, db_size), timeout=3600)
+        self.db_size = sum(1 for line in open(os.path.join(self.app.config['CONFIG_PATH'], database)) if line.rstrip())
+        print os.path.join(self.app.config['CONFIG_PATH'], database)
+        job = self.rq.enqueue_call(Tasks.search, args=(cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size), timeout=3600)
 
         return job
 
