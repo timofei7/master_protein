@@ -53,7 +53,7 @@ class MasterSearch(object):
         """
         process the query
         """
-
+        self.db_size = sum(1 for line in open(os.path.join(self.app.config['CONFIG_PATH'], database)) if line.rstrip())
         error = None
         search_job = None
         tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])

@@ -107,7 +107,6 @@ class MasterSearch(Wizard):
         self.menu['num_structures'] = num_structures_menu
         full_matches_menu = self.create_full_matches_menu()
         self.menu['full_matches'] = full_matches_menu
-
         database_menu = self.create_database_menu()
         self.menu['database'] = database_menu
 
@@ -123,7 +122,7 @@ class MasterSearch(Wizard):
             [3, 'RMSD Cutoff: ' + str(self.rmsd_cutoff) + ' Angstroms', 'rmsd'],
             [3, 'Max Matches: ' + str(self.number_of_structures) + ' results', 'num_structures'],
             [3, 'Full Matches: ' + ['No', 'Yes'][self.full_match], 'full_matches'],
-            [3, 'Database: ' + self.database]
+            [3, 'Database: ' + str(self.database), 'database'],
             [2, 'Search', 'cmd.get_wizard().launch_search()'],
             [1, 'Sequence Logo', ''],
             [3, 'Select Search: ' + str(self.search), 'searches'],
@@ -300,6 +299,7 @@ class MasterSearch(Wizard):
                 self.rmsd_cutoff,
                 self.number_of_structures,
                 self.full_match,
+                self.database,
                 pdbstr,
                 self.url,
                 self.cmd,
