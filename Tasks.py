@@ -56,6 +56,7 @@ def search(cmd, basedir, tempdir, db_size):
 
     # compress the resultsdir
     compress_cmd = ['/usr/bin/tar', '-C', tardir, '-cf', tarname, os.path.join(basedir, fileid)]
+    print compress_cmd
 #    compress_cmd = ['/usr/bin/tar', '-C', basedir, '-czf', os.path.join(basedir, tarname), fileid]
     compress_process = subprocess.Popen(compress_cmd,
                                         stdout=subprocess.PIPE,

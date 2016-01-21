@@ -49,6 +49,7 @@ def search():
     # check query file
     if len(request.files) == 1 and 'query' in request.files:
         query_file = request.files['query']
+        database = str(sanitized['database'])
         if Checks.allowed_file(query_file.filename):
             print("found query_file: " + str(query_file))
         else:
@@ -57,7 +58,7 @@ def search():
         return jsonify({'error': 'no query file!'}), 201
 
     # start processing the query and give us some progress
-    search_job, tempdir, error = masterSearch.process(query_file, sanitized)
+    search_job, tempdir, error = masterSearch.process(query_file, database, sanitized)
     if error:
         return jsonify({'error': error}), 201
 

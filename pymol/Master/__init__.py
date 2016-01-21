@@ -39,6 +39,7 @@ class MasterSearch(Wizard):
         # default values for sequence logo UI
         self.operations = []
         self.searches = []
+        self.database = DATABASE_FULL
         self.search = None # current search action
         self.operation = None # current operation
 
@@ -107,6 +108,9 @@ class MasterSearch(Wizard):
         full_matches_menu = self.create_full_matches_menu()
         self.menu['full_matches'] = full_matches_menu
 
+        database_menu = self.create_database_menu()
+        self.menu['database'] = database_menu
+
         '''
         sets up the menu ui for sequence logo
         '''
@@ -119,6 +123,7 @@ class MasterSearch(Wizard):
             [3, 'RMSD Cutoff: ' + str(self.rmsd_cutoff) + ' Angstroms', 'rmsd'],
             [3, 'Max Matches: ' + str(self.number_of_structures) + ' results', 'num_structures'],
             [3, 'Full Matches: ' + ['No', 'Yes'][self.full_match], 'full_matches'],
+            [3, 'Database: ' + self.database]
             [2, 'Search', 'cmd.get_wizard().launch_search()'],
             [1, 'Sequence Logo', ''],
             [3, 'Select Search: ' + str(self.search), 'searches'],
@@ -133,6 +138,15 @@ class MasterSearch(Wizard):
         selected an rmsd cutoff via the wizard menu.
         """
         self.rmsd_cutoff = rmsd
+        self.cmd.refresh_wizard()
+
+
+    def set_database(self, database):
+        """
+        This is the method that will be called once the user has
+        selected an database via the wizard menu.
+        """
+        self.database = database
         self.cmd.refresh_wizard()
 
 
@@ -168,6 +182,17 @@ class MasterSearch(Wizard):
             num_structures_menu.append(
                 [1, str(n), 'cmd.get_wizard().set_num_structures(' + str(n) + ')'])
         return num_structures_menu
+
+
+    def create_database_menu(self):
+        """
+        This method will create a wizard menu for the database to run the search with
+        """
+        database_menu = [[2, 'Database', '']]
+        database_menu.append([1, "Full Database", 'cmd.get_wizard().set_database(' + str(DATABASE_FULL) + ')'])
+        database_menu.append([1, "Test Database", 'cmd.get_wizard().set_database(' + str(DATABASE_TEST) + ')'])
+
+        return database_menu
 
 
     def set_full_matches(self, full_matches):

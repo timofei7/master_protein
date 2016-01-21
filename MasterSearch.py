@@ -43,13 +43,13 @@ class MasterSearch(object):
         sets up some initial parameters and a redis queue and connection
         """
 
-        self.db_size = sum(1 for line in open(app.config['TARGET_LIST_PATH']) if line.rstrip())
+        #self.db_size = sum(1 for line in open(app.config['TARGET_LIST_PATH']) if line.rstrip())
         self.app = app
         self.redis_conn = Redis()
         self.rq = Queue(connection=self.redis_conn)
-        print('init with db size: ' + str(self.db_size))
+        #print('init with db size: ' + str(self.db_size))
 
-    def process(self, query_file, arguments):
+    def process(self, query_file, database, arguments):
         """
         process the query
         """
@@ -62,7 +62,7 @@ class MasterSearch(object):
             # save file
             query_file.save(query_filepath)
             pdsfile = self.pdb2pds(query_filepath)
-            search_job = self.qsearch(pdsfile, arguments)
+            search_job = self.qsearch(pdsfile, database, arguments)
         except Exception as e:
             print("processing failed: " + e.message)
             error = e.message
@@ -100,7 +100,7 @@ class MasterSearch(object):
         except Exception as e:
             raise Exception("couldn't convert file from pdb2pds: " + e.message)
 
-    def qsearch(self, query_filepath, arguments):
+    def qsearch(self, query_filepath, database, arguments):
         """
         perform the search
         """
@@ -118,7 +118,7 @@ class MasterSearch(object):
 
         cmd = [self.app.config['MASTER_PATH'],
                '--query', query_filepath,
-               '--targetList', self.app.config['TARGET_LIST_PATH'],
+               '--targetList', os.path.join(self.app.config['CONFIG_PATH'], database),
                '--rmsdCut', rmsd_cut,
                '--matchOut', match_out,
                '--seqOut', seq_out,

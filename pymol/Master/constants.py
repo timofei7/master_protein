@@ -9,3 +9,6 @@ MAIN_CACHE = os.path.dirname(__file__) + '/cache/'
 LOGO_CACHE = os.path.dirname(__file__) + '/cache/logos/'
 SEARCH_CACHE = os.path.dirname(__file__) + '/cache/searches/'
 RDM_FILE_NAME_LEN = 12
+
+DATABASE_TEST = 'targetList-fullBB'
+DATABASE_FULL = 'targetList-fullBB.orig'

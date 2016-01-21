@@ -27,7 +27,7 @@ class SearchThread(threading.Thread):
     """
 
     def __init__(
-            self, wiz, rmsd, num_struct, full_matches, pdbstrs, url, thecmd, dictionary):
+            self, wiz, rmsd, num_struct, full_matches, database, pdbstrs, url, thecmd, dictionary):
         """
         This is the constructor for our SearchThread.  Each time we perform
         a structural search, a new thread will be created.
@@ -40,6 +40,7 @@ class SearchThread(threading.Thread):
         self.num_structures = num_struct
         self.full_matches   = full_matches
         self.query          = pdbstrs
+        self.database       = database
         self.dictionary     = dictionary
         self.wizard         = wiz
 
@@ -143,6 +144,7 @@ class SearchThread(threading.Thread):
             data = [
                 ("topN", str(self.num_structures)),
                 ("outType", "match" if not self.full_matches else "full"),
+                ("database", str(self.database)),
                 ("query", (pycurl.FORM_BUFFER, 'sele.pdb', pycurl.FORM_BUFFERPTR, self.query)),
                 ("bbRMSD", "on"),
                 ("rmsdCut", str(self.rmsd_cutoff))
