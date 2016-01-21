@@ -53,7 +53,7 @@ class MasterSearch(object):
         """
         process the query
         """
-        self.db_size = sum(1 for line in open(os.path.join(self.app.config['CONFIG_PATH'], database)) if line.rstrip())
+
         error = None
         search_job = None
         tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])
@@ -129,7 +129,8 @@ class MasterSearch(object):
         if 'bbRMSD' in arguments:
           cmd.append('--bbRMSD')
 
-        job = self.rq.enqueue_call(Tasks.search, args=(cmd, self.app.config['PROCESSING_PATH'], tempdir, self.db_size), timeout=3600)
+        db_size = sum(1 for line in open(os.path.join(self.app.config['CONFIG_PATH'], database)) if line.rstrip())
+        job = self.rq.enqueue_call(Tasks.search, args=(cmd, self.app.config['PROCESSING_PATH'], tempdir, db_size), timeout=3600)
 
         return job
 
