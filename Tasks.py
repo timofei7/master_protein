@@ -20,8 +20,6 @@ def search(cmd, basedir, tempdir, db_size):
     progressfile = open(progressfile_path, "w+")
     fileid = os.path.basename(os.path.normpath(tempdir)).strip()
 
-    print cmd[4]
-
     tardir = os.path.join(basedir, '../compressed/')
     if not os.path.exists(tardir):
         os.makedirs(tardir)
