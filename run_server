@@ -4,7 +4,7 @@ DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 mkdir -p processing 2>&1 >/dev/null
 
 $DIR/kill_server
-redis-server &
+redis-server & --daemonize --pidfile /tmp/Nredis.pid --logfile /tmp/Nredis.log
 rqworker --pid /tmp/Nrqworker1.pid &
 rqworker --pid /tmp/Nrqworker2.pid &
 rqworker --pid /tmp/Nrqworker3.pid &
