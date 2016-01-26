@@ -8,6 +8,3 @@ kill -9 `cat /tmp/Nrqworker3.pid`
 kill -9 `cat /tmp/Nrqworker4.pid` 
 kill -9 `cat /tmp/Nrqworker5.pid` 
 kill -9 `cat /tmp/Nrqworker6.pid` 
-
-rm -f /tmp/Nrqworker*.pid 
-rm -f /tmp/Ngunicorn.pid
