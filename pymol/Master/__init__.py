@@ -391,32 +391,69 @@ def display_logo(app, query, residues, search_id, flag):
 
     logo = Label(window, image=img)
     logo.photo = img;
-    logo.pack(fill = BOTH, expand = 1, side = 'top')
+    logo.pack(fill = BOTH, expand = 1, side = TOP)
 
     window.update()
 
     # parse query
     residues_str = residues.split()
     residue_list = []
+    selected_list = []
     for residue_str in residues_str:
         residue = residue_str.split(',')
         residue_list.append(residue)
+        selected_list.append(False)
+
 
     label_list = []
 
+    total_width = 1.5*(len(residue_list)) + 1.905
+    left_margin = 56
+    right_margin = 14
+
     total_num_residues = len(residue_list)
-    button_width = logo.winfo_width() / total_num_residues
+    #button_width = logo.winfo_width() / total_num_residues
     cmd.select("curPos", "none")
 
+    # get the selection_first and selection_last, then convert them to indices
+    # if the indices start at 0 being the first char, then youre golden
+    # this text class will have a list of residues, and then you will simply
+    # go through the indices from the selection first index to selection last index
+    # and run the cmd.select on each of them
+
+    # when should you do this?  probably do it when the text is highlighted.
+    # this will ensure that as something gets highlighted, it immediately gets
+    # selected.  Interestingly, only one index will be highlighted at a time,
+    # so it might be as simple as getting the column index of the selection_last
+    # and using this as an index into the residue lis
+
+
+    textview = Text(window, height = 1, width = int(total_width), font=("Times",16))
+    textview.pack(side = BOTTOM, fill = BOTH, expand = 1, padx = (left_margin, right_margin))
+
     for i in range(0, total_num_residues):
+        index1 = "1." + str(i*3)
+        index2 = "1." + str(i*3+2)
+        textview.tag_add("tag"+str(i), index1, index2)
+        textview.tag_bind("tag"+str(i), '<1>', lambda e, t=textview: highlight_event(residue_list, selected_list, i))
+        textview.insert(END, " "+residue_list[i][0]+" ")
+        #button_container = Frame(window, width = button_width, height = BUTTON_HEIGHT)
+        #button_container.pack(side = 'left', fill = BOTH, expand = 1)
+        #button_container.pack_propagate(0)
 
-        button_container = Frame(window, width = button_width, height = BUTTON_HEIGHT)
-        button_container.pack(side = 'left', fill = BOTH, expand = 1)
-        button_container.pack_propagate(0)
+        #label = ResidueButton(button_container, residue = residue_list[i], position = i, textSize = 20, search_id = search_id)
+        #label.pack(side = 'left', fill = BOTH, expand = 1)
+        #label_list.append(label)
 
-        label = ResidueButton(button_container, residue = residue_list[i], position = i, textSize = 20, search_id = search_id)
-        label.pack(side = 'left', fill = BOTH, expand = 1)
-        label_list.append(label)
+    def highlight_event(residue_list, selected_list, i):
+        print 'click search chain '+residue_list[i][1]+' num '+residue_list[i][2]
+        if selected_list[i]:
+            cmd.select("curPos", "curPos and not (chain " + residue_list[i][1] + " and resi " +residue_list[i][2] + ")")
+            selected_list[i] = False
+        else:
+            cmd.select("curPos", "curPos or (chain " + residue_list[i][1] + " and resi " +residue_list[i][2] + ")")
+            selected_list[i] = True
+        sys.stdout.flush()
 
     def leave_event(event):
         for residue_label in label_list:
@@ -436,8 +473,8 @@ def display_logo(app, query, residues, search_id, flag):
             label_list[residue_num].click_one_event(None)
 
     logo.bind("<Button-1>", callback);
-    logo.bind('<Motion>', highlight)
-    logo.bind('<Leave>', leave_event)
+    #logo.bind('<Motion>', highlight)
+    #logo.bind('<Leave>', leave_event)
 
     window.after(100, cmd.get_wizard().update())
     window.mainloop()
@@ -474,8 +511,8 @@ class ResidueButton(Label):
                 self.selected = True
             sys.stdout.flush()
 
-
     def enter_event(self, event):
         self.config(bg = "green")
     def leave_event(self, event):
         self.config(bg = "white")
+
