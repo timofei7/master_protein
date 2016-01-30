@@ -428,15 +428,13 @@ def display_logo(app, query, residues, search_id, flag):
     # and using this as an index into the residue lis
 
 
-    textview = Text(window, height = 1, width = int(total_width), font=("Times",16))
+    textview = Text(window, height = 1, width = int(total_width), font=("Courier",16))
     textview.pack(side = BOTTOM, fill = BOTH, expand = 1, padx = (left_margin, right_margin))
-
+    index_dict = {}
+    textview.insert(END, " ")
     for i in range(0, total_num_residues):
-        index1 = "1." + str(i*3)
-        index2 = "1." + str(i*3+2)
-        textview.tag_add("tag"+str(i), index1, index2)
-        textview.tag_bind("tag"+str(i), '<1>', lambda e, t=textview: highlight_event(residue_list, selected_list, i))
-        textview.insert(END, " "+residue_list[i][0]+" ")
+        index_dict["index"] = i
+        textview.insert(END, residue_list[i][0]+" ")
         #button_container = Frame(window, width = button_width, height = BUTTON_HEIGHT)
         #button_container.pack(side = 'left', fill = BOTH, expand = 1)
         #button_container.pack_propagate(0)
@@ -445,15 +443,22 @@ def display_logo(app, query, residues, search_id, flag):
         #label.pack(side = 'left', fill = BOTH, expand = 1)
         #label_list.append(label)
 
-    def highlight_event(residue_list, selected_list, i):
-        print 'click search chain '+residue_list[i][1]+' num '+residue_list[i][2]
-        if selected_list[i]:
-            cmd.select("curPos", "curPos and not (chain " + residue_list[i][1] + " and resi " +residue_list[i][2] + ")")
-            selected_list[i] = False
-        else:
-            cmd.select("curPos", "curPos or (chain " + residue_list[i][1] + " and resi " +residue_list[i][2] + ")")
-            selected_list[i] = True
-        sys.stdout.flush()
+    def highlight_event():
+
+        print textview.index(SEL_FIRST), textview.index(SEL_LAST)
+        if index_dict.has_key(textview.index(SEL_FIRST)) and index_dict.has_key(textview.index(SEL_LAST)):
+            for i in range(index_dict[SEL_FIRST], index_dict[SEL_LAST]):
+                print 'click search chain '+residue_list[i][1]+' num '+residue_list[i][2]
+                if selected_list[i]:
+                    cmd.select("curPos", "curPos and not (chain " + residue_list[i][1] + " and resi " +residue_list[i][2] + ")")
+                    selected_list[i] = False
+                else:
+                    cmd.select("curPos", "curPos or (chain " + residue_list[i][1] + " and resi " +residue_list[i][2] + ")")
+                    selected_list[i] = True
+                sys.stdout.flush()
+
+    def test_event():
+        print "hello"
 
     def leave_event(event):
         for residue_label in label_list:
@@ -472,6 +477,7 @@ def display_logo(app, query, residues, search_id, flag):
             label_list[residue_num].enter_event(None)
             label_list[residue_num].click_one_event(None)
 
+    textview.bind("<<Selection>>", test_event())
     logo.bind("<Button-1>", callback);
     #logo.bind('<Motion>', highlight)
     #logo.bind('<Leave>', leave_event)
