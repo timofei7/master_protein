@@ -395,18 +395,22 @@ def display_logo(app, query, residues, search_id, flag):
 
     window.update()
 
-    # parse query
+    # parse query, add residues to a list for later reference
     residues_str = residues.split()
     residue_list = []
+
+    # selected list lets us check if the residue is selected or not
     selected_list = []
+
     for residue_str in residues_str:
         residue = residue_str.split(',')
         residue_list.append(residue)
         selected_list.append(False)
 
+    # used for the buttons
+    #label_list = []
 
-    label_list = []
-
+    # some temporary values to play around with
     total_width = 1.5*(len(residue_list)) + 1.905
     left_margin = 56
     right_margin = 14
@@ -427,14 +431,23 @@ def display_logo(app, query, residues, search_id, flag):
     # so it might be as simple as getting the column index of the selection_last
     # and using this as an index into the residue lis
 
-
+    # create the textbox with the residue names
     textview = Text(window, height = 1, width = int(total_width), font=("Courier",16))
     textview.pack(side = BOTTOM, fill = BOTH, expand = 1, padx = (left_margin, right_margin))
+
+    # set up dictionary to link char index with residue index
     index_dict = {}
+
+    # initial boundary
     textview.insert(END, " ")
+
     for i in range(0, total_num_residues):
+
+        # store the index of the character as a key, with the index in the residue list as value
         index_dict["index"] = i
         textview.insert(END, residue_list[i][0]+" ")
+
+        # The stuff below is for the original buttons
         #button_container = Frame(window, width = button_width, height = BUTTON_HEIGHT)
         #button_container.pack(side = 'left', fill = BOTH, expand = 1)
         #button_container.pack_propagate(0)
@@ -444,7 +457,7 @@ def display_logo(app, query, residues, search_id, flag):
         #label_list.append(label)
 
     def highlight_event():
-
+        # try to get the index of the selected characters, and look up residue for selection
         print textview.index(SEL_FIRST), textview.index(SEL_LAST)
         if index_dict.has_key(textview.index(SEL_FIRST)) and index_dict.has_key(textview.index(SEL_LAST)):
             for i in range(index_dict[SEL_FIRST], index_dict[SEL_LAST]):
@@ -477,8 +490,11 @@ def display_logo(app, query, residues, search_id, flag):
             label_list[residue_num].enter_event(None)
             label_list[residue_num].click_one_event(None)
 
+    # this should bind the highlight event to the test event
     textview.bind("<<Selection>>", test_event())
-    logo.bind("<Button-1>", callback);
+
+    # This stuff sets up the clicking directly on the image
+    # logo.bind("<Button-1>", callback);
     #logo.bind('<Motion>', highlight)
     #logo.bind('<Leave>', leave_event)
 
