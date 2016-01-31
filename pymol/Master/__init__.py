@@ -455,6 +455,7 @@ def display_logo(app, query, residues, search_id, flag):
         #label = ResidueButton(button_container, residue = residue_list[i], position = i, textSize = 20, search_id = search_id)
         #label.pack(side = 'left', fill = BOTH, expand = 1)
         #label_list.append(label)
+    textview.config(state=DISABLED)
 
     def highlight_event():
         # try to get the index of the selected characters, and look up residue for selection
@@ -470,7 +471,7 @@ def display_logo(app, query, residues, search_id, flag):
                     selected_list[i] = True
                 sys.stdout.flush()
 
-    def test_event():
+    def test_event(event):
         print "hello"
 
     def leave_event(event):
@@ -491,7 +492,7 @@ def display_logo(app, query, residues, search_id, flag):
             label_list[residue_num].click_one_event(None)
 
     # this should bind the highlight event to the test event
-    textview.bind("<<Selection>>", test_event())
+    textview.bind("<<Selection>>", test_event)
 
     # This stuff sets up the clicking directly on the image
     # logo.bind("<Button-1>", callback);
