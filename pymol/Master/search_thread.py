@@ -74,7 +74,8 @@ class SearchThread(threading.Thread):
                 self.databuffer.write(streamdata.strip())
                 # append to databuffer cause sometimes packets for results span multiple calls
         except ValueError:
-            self.databuffer.write(streamdata.strip())
+            if 'progress' not in jsondata:
+                self.databuffer.write(streamdata.strip())
             # for valueerror we just append cause this could be multiple packets
         except Exception as e:
             # stop on error
@@ -140,7 +141,7 @@ class SearchThread(threading.Thread):
             f.write(self.queryString+'\n')
             f.close()
 
-            # create data object, what kind of object is this?
+            # create JSON data object
             data = [
                 ("topN", str(self.num_structures)),
                 ("outType", "match" if not self.full_matches else "full"),
