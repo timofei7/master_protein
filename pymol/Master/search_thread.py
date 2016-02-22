@@ -63,9 +63,10 @@ class SearchThread(threading.Thread):
         try:
             jsondata = json.loads(streamdata)
             if 'progress' in jsondata:
-                progs = jsondata['progress'].strip()
-                #print("processing: {0:.0%}".format(float(progs)))
-                self.wizard.set_searchProgress(float(progs))
+                if not jsondata['progress'] == "":
+                    progs = jsondata['progress'].strip()
+                    #print("processing: {0:.0%}".format(float(progs)))
+                    self.wizard.set_searchProgress(float(progs))
             elif 'error' in jsondata:
                 #raise Exception(jsondata['error'])
                 self.wizard.set_errorMessage(jsondata['error'])
@@ -74,8 +75,7 @@ class SearchThread(threading.Thread):
                 self.databuffer.write(streamdata.strip())
                 # append to databuffer cause sometimes packets for results span multiple calls
         except ValueError:
-            if 'progress' not in jsondata:
-                self.databuffer.write(streamdata.strip())
+            self.databuffer.write(streamdata.strip())
             # for valueerror we just append cause this could be multiple packets
         except Exception as e:
             # stop on error
