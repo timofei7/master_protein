@@ -532,6 +532,7 @@ def display_logo(app, query, residues, search_id, flag):
         logoThread.start()
         logoThread.join()
 
+
     menubar = Menu(window)
     filemenu=Menu(menubar,tearoff=0)
 
