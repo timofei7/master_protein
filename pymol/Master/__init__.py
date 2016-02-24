@@ -532,8 +532,20 @@ def display_logo(app, query, residues, search_id, flag):
         logoThread.start()
         logoThread.join()
 
-    save_button = Button(window, text = "Save Image", command = saveFile)
-    save_button.pack(side = BOTTOM)
+
+    menubar = Menu(window)
+    filemenu=Menu(menubar,tearoff=0)
+
+    filemenu.add_command(label="Save", command=saveFile)
+    filemenu.add_separator()
+    filemenu.add_command(label="Exit", command=window.destroy)
+    menubar.add_cascade(label="File", menu=filemenu)
+
+    helpmenu=Menu(menubar,tearoff=0)
+    helpmenu.add_command(label="Help")
+    menubar.add_cascade(label="Help",menu=helpmenu)
+
+    window.config(menu=menubar)
 
     window.after(100, cmd.get_wizard().update())
     window.mainloop()
