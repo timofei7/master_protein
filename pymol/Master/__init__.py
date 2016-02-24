@@ -509,31 +509,5 @@ def display_logo(app, query, residues, search_id, flag):
     textview.bind("<Button-1>", mouse_down)
     textview.bind("<B1-Motion>", mouse_drag)
 
-    def saveFile():
-        f = tkFileDialog.asksaveasfile(mode='w', defaultextension=".eps")
-
-        # the user cancelled the save
-        if f is None:
-            print("Save cancelled")
-            return
-
-        # get the EPS file from the server and write it
-        f.write(None)
-        f.close()
-        print("Successfully saved")
-
-    def getLogoFile():
-        logoThread = LogoThread(
-            rmsd_cutoff,
-            dictionary[self.search],
-            int(flag),
-            LOGOurl,
-            cmd)
-        logoThread.start()
-        logoThread.join()
-
-    save_button = Button(window, text = "Save Image", command = saveFile)
-    save_button.pack(side = BOTTOM)
-
     window.after(100, cmd.get_wizard().update())
     window.mainloop()
