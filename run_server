@@ -1,5 +1,5 @@
 #!/bin/bash
-#
+
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 mkdir -p processing 2>&1 >/dev/null
 
@@ -11,4 +11,4 @@ rqworker --pid /tmp/Nrqworker3.pid &
 rqworker --pid /tmp/Nrqworker4.pid &
 rqworker --pid /tmp/Nrqworker5.pid &
 rqworker --pid /tmp/Nrqworker6.pid &
-gunicorn --pid /tmp/Ngunicorn.pid --daemon -w 6 --graceful-timeout 1200 --timeout 1200 -b 0.0.0.0:5001 MasterApp:app
+gunicorn --pid /tmp/Ngunicorn.pid --access-logfile /tmp/Ngunicorn.log --daemon -w 6 --graceful-timeout 1200 --timeout 1200 -b 0.0.0.0:5001 MasterApp:app
