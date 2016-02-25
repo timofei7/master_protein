@@ -233,9 +233,6 @@ class MasterSearch(Wizard):
         self.cmd.refresh_wizard()
 
 
-    '''
-    This is the section for adding Sequence Logo UI
-    '''
     def create_select_search_menu(self):
         select_search_menu = []
         select_search_menu.append([2, 'History', ''])
@@ -343,42 +340,10 @@ class MasterSearch(Wizard):
             self.status = 'waiting for selection'
         return self.prompt
 
-def master_search(app):
-    """
-    MASTER search
-    """
 
-    # create a folder for storing temporary data
-    if not os.path.exists(MAIN_CACHE):
-        os.makedirs(MAIN_CACHE)
-
-    if not os.path.exists(SEARCH_CACHE):
-        os.makedirs(SEARCH_CACHE)
-
-    if not os.path.exists(LOGO_CACHE):
-        os.makedirs(LOGO_CACHE)
-
-    wiz = MasterSearch(app)
-    cmd.set_wizard(wiz)
-
-
-# add "master_search" as pymol command
-cmd.extend('master_search', master_search)
-
-# trick to get "wizard master_search" working
-sys.modules['pymol.wizard.master_search'] = sys.modules[__name__]
-
-try:
-    from pymol.plugins import addmenuitem
-
-    # add item to plugin menu
-    def __init_plugin__(self):
-        addmenuitem('MASTER Search v0.1', lambda s=self : master_search(s))
-except:
-    def __init__(self):
-        self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
-                                 label='MASTER search', command=lambda s=self: master_search(s))
-
+'''
+This is the code for the Sequence Logo UI
+'''
 def display_logo(app, query, residues, search_id, flag):
 
     window = Toplevel(app.root)
@@ -523,6 +488,9 @@ def display_logo(app, query, residues, search_id, flag):
         print("Successfully saved")
 
     def getLogoFile():
+        app.status = 'logo request launched'
+        cmd.refresh_wizard()
+
         logoThread = LogoThread(
             rmsd_cutoff,
             dictionary[self.search],
@@ -532,16 +500,22 @@ def display_logo(app, query, residues, search_id, flag):
         logoThread.start()
         logoThread.join()
 
+        self.status = 'logo request finished'
+        self.cmd.refresh_wizard()
+        path = SEARCH_CACHE + str(self.search)
+
 
     menubar = Menu(window)
     filemenu=Menu(menubar,tearoff=0)
 
+    filemenu.add_separator()
     filemenu.add_command(label="Save", command=saveFile)
     filemenu.add_separator()
     filemenu.add_command(label="Exit", command=window.destroy)
     menubar.add_cascade(label="File", menu=filemenu)
 
     helpmenu=Menu(menubar,tearoff=0)
+    helpmenu.add_separator()
     helpmenu.add_command(label="Help")
     menubar.add_cascade(label="Help",menu=helpmenu)
 
@@ -549,3 +523,44 @@ def display_logo(app, query, residues, search_id, flag):
 
     window.after(100, cmd.get_wizard().update())
     window.mainloop()
+
+
+'''
+Wrapper class for the MasterSearch client application
+'''
+def master_search(app):
+    """
+    MASTER search
+    """
+
+    # create a folder for storing temporary data
+    if not os.path.exists(MAIN_CACHE):
+        os.makedirs(MAIN_CACHE)
+
+    if not os.path.exists(SEARCH_CACHE):
+        os.makedirs(SEARCH_CACHE)
+
+    if not os.path.exists(LOGO_CACHE):
+        os.makedirs(LOGO_CACHE)
+
+    wiz = MasterSearch(app)
+    cmd.set_wizard(wiz)
+
+
+# add "master_search" as pymol command
+cmd.extend('master_search', master_search)
+
+# trick to get "wizard master_search" working
+sys.modules['pymol.wizard.master_search'] = sys.modules[__name__]
+
+try:
+    from pymol.plugins import addmenuitem
+
+    # add item to plugin menu
+    def __init_plugin__(self):
+        addmenuitem('MASTER Search v0.1', master_search(self))
+except:
+    def __init__(self):
+        self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
+                                 label='MASTER search', command=master_search(self))
+
