@@ -482,8 +482,10 @@ def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
             print("Save cancelled")
             return
 
+        print f.name
+
         # get the EPS file from the server and write it
-        getLogoFile(f)
+        getLogoFile(f.name)
         f.close()
         print("Successfully saved")
         plugin.status = 'SequenceLogo saved'
@@ -493,7 +495,7 @@ def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
         plugin.status = 'vector graphic requested'
         cmd.refresh_wizard()
 
-        ext = str.split(".", filepath)[-1]
+        ext = filepath.split(".")[-1]
 
         logoThread = LogoThread(
             rmsd_cutoff,

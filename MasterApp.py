@@ -123,6 +123,8 @@ def logo_gen():
     else:
         image_filepath = os.path.join(tempdir, 'logo.' + ext)
 
+    print image_filepath
+
     seq_filepath = os.path.join(tempdir, 'seq')
 
     if flag == 1:
