@@ -39,12 +39,12 @@ def hello():
 @app.route("/api/search", methods=['POST', 'OPTIONS'])
 def search():
 
+    sanitized = Checks.sanitize_args(request.form)
+
     # check args
     (is_allowed, not_allowed_list) = Checks.allowed_args(request.form)
     if not is_allowed:
         return jsonify({'error': 'bad parameters: ' + ', '.join(not_allowed_list)})
-
-    sanitized = Checks.sanitize_args(request.form)
 
     # check query file
     if len(request.files) == 1 and 'query' in request.files:

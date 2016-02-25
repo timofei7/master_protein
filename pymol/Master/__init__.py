@@ -8,6 +8,7 @@ author:   Tim Tregubov, 12/2014
 from pymol.wizard import Wizard
 from pymol import cmd
 import math
+import tkFileDialog
 from search_thread import *
 from logo_thread import *
 from Tkinter import *
@@ -391,91 +392,122 @@ def display_logo(app, query, residues, search_id, flag):
 
     logo = Label(window, image=img)
     logo.photo = img;
-    logo.pack(fill = BOTH, expand = 1, side = 'top')
+    logo.pack(fill = BOTH, expand = 1, side = TOP)
 
     window.update()
 
-    # parse query
+    # parse query, add residues to a list for later reference
     residues_str = residues.split()
     residue_list = []
+
+    # selected list lets us check if the residue is selected or not
+    selected_list = []
+
     for residue_str in residues_str:
         residue = residue_str.split(',')
         residue_list.append(residue)
+        selected_list.append(False)
 
-    label_list = []
+    # some temporary values to play around with
+    total_width = 1.5*(len(residue_list)) + 1.905
+    left_margin = 53
+    right_margin = 14
 
     total_num_residues = len(residue_list)
-    button_width = logo.winfo_width() / total_num_residues
+
+    # set up empty initial selection object
     cmd.select("curPos", "none")
+
+    # create the textbox with the residue names
+    textview = Text(window, height = 1, width = int(total_width), font=("Courier",15))
+    textview.config(cursor="left_ptr")
+    textview.config(background = "black")
+    textview.config(foreground = "green2")
+    textview.pack(side = BOTTOM, fill = BOTH, expand = 1, padx = (left_margin, right_margin))
+
+    # set up the indices that will change on click down and up, respectively
+    start = -1
 
     for i in range(0, total_num_residues):
 
-        button_container = Frame(window, width = button_width, height = BUTTON_HEIGHT)
-        button_container.pack(side = 'left', fill = BOTH, expand = 1)
-        button_container.pack_propagate(0)
+        # add the residue character into the string, with the associated tag
+        textview.tag_configure(str(i))
+        textview.insert(END, residue_list[i][0], str(i))
 
-        label = ResidueButton(button_container, residue = residue_list[i], position = i, textSize = 20, search_id = search_id)
-        label.pack(side = 'left', fill = BOTH, expand = 1)
-        label_list.append(label)
+    textview.config(state=DISABLED)
 
-    def leave_event(event):
-        for residue_label in label_list:
-            residue_label.leave_event(None)
+    def mouse_down(event):
+        global start
 
-    def highlight(event):
-        residue_num = int(math.ceil((event.x-60) / 110))
-        for residue_label in label_list:
-            residue_label.leave_event(None)
-        if(residue_num < len(residue_list) and residue_num >= 0):
-            label_list[residue_num].enter_event(None)
+        # try to get the index based on the click coordinates
+        i = int(math.ceil((event.x-3)/9))
 
-    def callback(event):
-        residue_num = int(math.ceil((event.x-60) / 110))
-        if(residue_num < len(residue_list) and residue_num >= 0):
-            label_list[residue_num].enter_event(None)
-            label_list[residue_num].click_one_event(None)
+        # make sure you are in the window
+        if(event.y>20 or event.y<2):
+            return
 
-    logo.bind("<Button-1>", callback);
-    logo.bind('<Motion>', highlight)
-    logo.bind('<Leave>', leave_event)
+        # must be a valid index
+        if(i >= total_num_residues):
+            return
+
+        # set the start index of the dragging
+        start = i
+
+        # handle selection/deselection
+        if(selected_list[i]):
+            textview.tag_configure(str(i), background ='black')
+            textview.tag_configure(str(i), foreground = "green2")
+            residue_deselect(i)
+            selected_list[i] = False
+
+        else:
+            textview.tag_configure(str(i), background ='green2')
+            textview.tag_configure(str(i), foreground = "black")
+            residue_select(i)
+            selected_list[i] = True
+
+    def mouse_drag(event):
+        # try to get the index of the selected characters, and look up residue for selection
+        global start
+        i = int(math.ceil((event.x-3)/9))
+
+        # make sure you are in the window
+        if(event.y>20 or event.y<2):
+            return
+
+        # must be a valid index
+        if(i >= total_num_residues):
+            return
+
+        # don't worry about the one you just selected
+        if start != i:
+
+            # handle selection/deselection
+            if(selected_list[i]):
+                textview.tag_configure(str(i), background ='black')
+                textview.tag_configure(str(i), foreground = "green2")
+                residue_deselect(i)
+                selected_list[i] = False
+                start = i
+
+            else:
+                textview.tag_configure(str(i), background ='green2')
+                textview.tag_configure(str(i), foreground = "black")
+                residue_select(i)
+                selected_list[i] = True
+                start = i
+
+    def residue_select(i):
+        print 'click search chain '+residue_list[i][1]+' num '+residue_list[i][2]
+        cmd.select("curPos", "curPos or (chain " + residue_list[i][1] + " and resi " + residue_list[i][2] + ")")
+        sys.stdout.flush()
+
+    def residue_deselect(i):
+        cmd.select("curPos", "curPos and not (chain " + residue_list[i][1] + " and resi " + residue_list[i][2] + ")")
+
+    # this should bind the highlight event to the test event
+    textview.bind("<Button-1>", mouse_down)
+    textview.bind("<B1-Motion>", mouse_drag)
 
     window.after(100, cmd.get_wizard().update())
     window.mainloop()
-
-
-class ResidueButton(Label):
-    '''
-    Label with action listeners implemented
-    '''
-    def __init__(self, master, residue, position, textSize, search_id):
-        Label.__init__(self, master)
-        self.position = position
-        self.residue = residue
-        self.textSize = textSize
-        self.search_id = search_id
-        self.selected = False
-
-        self.config(text = str(self.residue[0]))
-        self.config(bg="white")
-
-        # bind events
-        self.bind("<Enter>", self.enter_event)
-        self.bind("<Leave>", self.leave_event)
-        self.bind("<Button-1>", self.click_one_event)
-
-
-    def click_one_event(self, event):
-            print 'click search '+self.search_id+' chain '+self.residue[1]+' num '+self.residue[2]
-            if self.selected:
-                cmd.select("curPos", "curPos and not (chain " + self.residue[1] + " and resi " +self.residue[2] + ")")
-                self.selected = False
-            else:
-                cmd.select("curPos", "curPos or (chain " + self.residue[1] + " and resi " +self.residue[2] + ")")
-                self.selected = True
-            sys.stdout.flush()
-
-
-    def enter_event(self, event):
-        self.config(bg = "green")
-    def leave_event(self, event):
-        self.config(bg = "white")

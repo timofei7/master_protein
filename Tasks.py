@@ -29,6 +29,7 @@ def search(cmd, basedir, tempdir, db_size):
                                stdout=subprocess.PIPE,
                                stderr=subprocess.PIPE,
                                stdin=subprocess.PIPE)
+
     out = []
     err = []
     count = 0.0
