@@ -21,7 +21,7 @@ class LogoThread(threading.Thread):
     search thread allows the ui to remain responsive while this sends off the search request and waits
     """
 
-    def __init__(self, rmsd, search_id, flag, url, thecmd):
+    def __init__(self, rmsd, search_id, flag, url, thecmd, logo_filepath = None, extension = "gif"):
         """
         This is the constructor for our SearchThread.  Each time we perform
         a structural search, a new thread will be created.
@@ -38,6 +38,8 @@ class LogoThread(threading.Thread):
         # PyMOL routines keep their own copy of the 'cmd' object why?
         self.cmd = thecmd
 
+        self.logo_filepath = logo_filepath  # defalut value is None, will be set based on query name
+        self.extension = extension
         self.url = url  # Currently selected host
         self.conn = None
         self.error = None
@@ -91,7 +93,8 @@ class LogoThread(threading.Thread):
             data = [
                 ('query', self.query),
                 ('flag', str(self.flag)),
-                ('rmsdCut', "999")
+                ('rmsdCut', "999"),
+                ('ext', self.extension)
             ]
             self.conn.setopt(pycurl.HTTPPOST, data)
 
@@ -109,10 +112,13 @@ class LogoThread(threading.Thread):
                         if 'logo' in jsondata:
                             unencoded = base64.standard_b64decode(jsondata['logo'])
 
-                            if self.flag == 1:
-                                logo_filepath = LOGO_CACHE + str(self.query)+'s.gif'
-                            elif self.flag == 2:
-                                logo_filepath = LOGO_CACHE + str(self.query)+'f.gif'
+                            if self.logo_filepath == None:
+                                if self.flag == 1:
+                                    logo_filepath = LOGO_CACHE + str(self.query)+'s.gif'
+                                elif self.flag == 2:
+                                    logo_filepath = LOGO_CACHE + str(self.query)+'f.gif'
+                            else:
+                                logo_filepath = self.logo_filepath
 
                             logo_file = open(logo_filepath, 'wb')
                             logo_file.write(unencoded)

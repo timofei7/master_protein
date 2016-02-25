@@ -278,7 +278,7 @@ class MasterSearch(Wizard):
 
             query = self.dictionary[self.search]
             self.makeLogo = 0
-            display_logo(self.app, query, residues, self.search, flag)
+            display_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, flag, self)
 
 
     def stop_logo(self, message=''):
@@ -344,8 +344,10 @@ class MasterSearch(Wizard):
 '''
 This is the code for the Sequence Logo UI
 '''
-def display_logo(app, query, residues, search_id, flag):
-
+def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
+    """
+    This method handles creating a SequenceLogo UI with Tkinter
+    """
     window = Toplevel(app.root)
 
     if flag == 1:
@@ -380,7 +382,7 @@ def display_logo(app, query, residues, search_id, flag):
 
     total_num_residues = len(residue_list)
 
-    # set up empty initial selection object
+    # set up empty initial selection object used by PyMol to group selections
     cmd.select("curPos", "none")
 
     # create the textbox with the residue names
@@ -421,13 +423,12 @@ def display_logo(app, query, residues, search_id, flag):
         # handle selection/deselection
         if(selected_list[i]):
             textview.tag_configure(str(i), background ='black')
-            textview.tag_configure(str(i), foreground = "green2")
+            textview.tag_configure(str(i), foreground = 'green2')
             residue_deselect(i)
             selected_list[i] = False
-
         else:
             textview.tag_configure(str(i), background ='green2')
-            textview.tag_configure(str(i), foreground = "black")
+            textview.tag_configure(str(i), foreground = 'black')
             residue_select(i)
             selected_list[i] = True
 
@@ -450,14 +451,13 @@ def display_logo(app, query, residues, search_id, flag):
             # handle selection/deselection
             if(selected_list[i]):
                 textview.tag_configure(str(i), background ='black')
-                textview.tag_configure(str(i), foreground = "green2")
+                textview.tag_configure(str(i), foreground = 'green2')
                 residue_deselect(i)
                 selected_list[i] = False
                 start = i
-
             else:
                 textview.tag_configure(str(i), background ='green2')
-                textview.tag_configure(str(i), foreground = "black")
+                textview.tag_configure(str(i), foreground = 'black')
                 residue_select(i)
                 selected_list[i] = True
                 start = i
@@ -483,26 +483,31 @@ def display_logo(app, query, residues, search_id, flag):
             return
 
         # get the EPS file from the server and write it
-        f.write(None)
+        getLogoFile(f)
         f.close()
         print("Successfully saved")
-
-    def getLogoFile():
-        app.status = 'logo request launched'
+        plugin.status = 'SequenceLogo saved'
         cmd.refresh_wizard()
+
+    def getLogoFile(filepath):
+        plugin.status = 'vector graphic requested'
+        cmd.refresh_wizard()
+
+        ext = str.split(".", filepath)[-1]
 
         logoThread = LogoThread(
             rmsd_cutoff,
-            dictionary[self.search],
+            query,
             int(flag),
             LOGOurl,
-            cmd)
+            cmd,
+            filepath,
+            ext)
         logoThread.start()
         logoThread.join()
 
-        self.status = 'logo request finished'
-        self.cmd.refresh_wizard()
-        path = SEARCH_CACHE + str(self.search)
+        plugin.status = 'vector graphic received'
+        cmd.refresh_wizard()
 
 
     menubar = Menu(window)

@@ -114,9 +114,15 @@ def logo_gen():
     sanitized = Checks.sanitize_args(request.form)
     search_id = str(sanitized['query'])
     flag = int(sanitized['flag'])
+    ext = str(sanitized['ext'])
 
     tempdir = os.path.join(app.config['PROCESSING_PATH'], search_id)
-    image_filepath = os.path.join(tempdir, 'logo.png')
+
+    if ext == "gif":
+        image_filepath = os.path.join(tempdir, 'logo.png')
+    else:
+        image_filepath = os.path.join(tempdir, 'logo.' + ext)
+
     seq_filepath = os.path.join(tempdir, 'seq')
 
     if flag == 1:
@@ -127,14 +133,18 @@ def logo_gen():
     args = shlex.split(arg_string)
 
     subprocess.call(args, stdout=subprocess.PIPE)
-    
-    gif_filepath = os.path.join(tempdir, 'logo.gif')
-    convert_string = "convert " + image_filepath + " " + gif_filepath
-    args2 = shlex.split(convert_string)
 
-    subprocess.call(args2)
+    if ext == "gif":
+        gif_filepath = os.path.join(tempdir, 'logo.gif')
+        convert_string = "convert " + image_filepath + " " + gif_filepath
+        args2 = shlex.split(convert_string)
 
-    str_file = str(open(gif_filepath).read())
+        subprocess.call(args2)
+
+        str_file = str(open(gif_filepath).read())
+    else:
+        str_file  = str(open(image_filepath).read())
+
     encoded_file = base64.standard_b64encode(str_file)
 
     return Response(json.dumps({'results' : "yes",
