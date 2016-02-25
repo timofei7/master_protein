@@ -349,6 +349,7 @@ def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
     This method handles creating a SequenceLogo UI with Tkinter
     """
     window = Toplevel(app.root)
+    window.configure(background='black', relief = 'raised', bd = 2)
 
     if flag == 1:
         logo_filepath = LOGO_CACHE + str(query)+"s.gif"
@@ -386,10 +387,12 @@ def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
     cmd.select("curPos", "none")
 
     # create the textbox with the residue names
-    textview = Text(window, height = 1, width = int(total_width), font=("Courier",15))
-    textview.config(cursor="left_ptr")
-    textview.config(background = "black")
-    textview.config(foreground = "green2")
+    textview = Text(window, height = 1, width = int(total_width), font=("Courier", 15))
+    textview.config(highlightthickness = 0, bd = 0,) # remove border
+    textview.config(cursor = 'left_ptr') # stylistic options
+    textview.config(background = 'black')
+    textview.config(foreground = 'green2')
+    textview.config(selectbackground = 'black')
     textview.pack(side = BOTTOM, fill = BOTH, expand = 1, padx = (left_margin, right_margin))
 
     # set up the indices that will change on click down and up, respectively
@@ -436,10 +439,6 @@ def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
         # try to get the index of the selected characters, and look up residue for selection
         global start
         i = int(math.ceil((event.x-3)/9))
-
-        # make sure you are in the window
-        if(event.y>20 or event.y<2):
-            return
 
         # must be a valid index
         if(i >= total_num_residues):
@@ -511,20 +510,20 @@ def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
         plugin.status = 'vector graphic received'
         cmd.refresh_wizard()
 
-
+    # create menu and dropdowns
     menubar = Menu(window)
-    filemenu=Menu(menubar,tearoff=0)
 
+    filemenu= Menu(menubar,tearoff=0)
     filemenu.add_separator()
     filemenu.add_command(label="Save", command=saveFile)
     filemenu.add_separator()
     filemenu.add_command(label="Exit", command=window.destroy)
-    menubar.add_cascade(label="File", menu=filemenu)
+    menubar.add_cascade(label="File", menu=filemenu, underline = 0)
 
     helpmenu=Menu(menubar,tearoff=0)
     helpmenu.add_separator()
     helpmenu.add_command(label="Help")
-    menubar.add_cascade(label="Help",menu=helpmenu)
+    menubar.add_cascade(label="Help",menu=helpmenu, underline = 0)
 
     window.config(menu=menubar)
 
@@ -565,9 +564,9 @@ try:
 
     # add item to plugin menu
     def __init_plugin__(self):
-        addmenuitem('MASTER Search v0.1', master_search(self))
+        addmenuitem('MASTER Search v0.1', lambda s = self: master_search(s))
 except:
     def __init__(self):
         self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
-                                 label='MASTER search', command=master_search(self))
+                                 label='MASTER search', command= lambda s = self: master_search(s))
 
