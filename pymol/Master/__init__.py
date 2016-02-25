@@ -233,9 +233,6 @@ class MasterSearch(Wizard):
         self.cmd.refresh_wizard()
 
 
-    '''
-    This is the section for adding Sequence Logo UI
-    '''
     def create_select_search_menu(self):
         select_search_menu = []
         select_search_menu.append([2, 'History', ''])
@@ -281,7 +278,7 @@ class MasterSearch(Wizard):
 
             query = self.dictionary[self.search]
             self.makeLogo = 0
-            display_logo(self.app, query, residues, self.search, flag)
+            display_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, flag, self)
 
 
     def stop_logo(self, message=''):
@@ -343,44 +340,14 @@ class MasterSearch(Wizard):
             self.status = 'waiting for selection'
         return self.prompt
 
-def master_search(app):
+
+'''
+This is the code for the Sequence Logo UI
+'''
+def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
     """
-    MASTER search
+    This method handles creating a SequenceLogo UI with Tkinter
     """
-
-    # create a folder for storing temporary data
-    if not os.path.exists(MAIN_CACHE):
-        os.makedirs(MAIN_CACHE)
-
-    if not os.path.exists(SEARCH_CACHE):
-        os.makedirs(SEARCH_CACHE)
-
-    if not os.path.exists(LOGO_CACHE):
-        os.makedirs(LOGO_CACHE)
-
-    wiz = MasterSearch(app)
-    cmd.set_wizard(wiz)
-
-
-# add "master_search" as pymol command
-cmd.extend('master_search', master_search)
-
-# trick to get "wizard master_search" working
-sys.modules['pymol.wizard.master_search'] = sys.modules[__name__]
-
-try:
-    from pymol.plugins import addmenuitem
-
-    # add item to plugin menu
-    def __init_plugin__(self):
-        addmenuitem('MASTER Search v0.1', lambda s=self : master_search(s))
-except:
-    def __init__(self):
-        self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
-                                 label='MASTER search', command=lambda s=self: master_search(s))
-
-def display_logo(app, query, residues, search_id, flag):
-
     window = Toplevel(app.root)
 
     if flag == 1:
@@ -415,7 +382,7 @@ def display_logo(app, query, residues, search_id, flag):
 
     total_num_residues = len(residue_list)
 
-    # set up empty initial selection object
+    # set up empty initial selection object used by PyMol to group selections
     cmd.select("curPos", "none")
 
     # create the textbox with the residue names
@@ -456,13 +423,12 @@ def display_logo(app, query, residues, search_id, flag):
         # handle selection/deselection
         if(selected_list[i]):
             textview.tag_configure(str(i), background ='black')
-            textview.tag_configure(str(i), foreground = "green2")
+            textview.tag_configure(str(i), foreground = 'green2')
             residue_deselect(i)
             selected_list[i] = False
-
         else:
             textview.tag_configure(str(i), background ='green2')
-            textview.tag_configure(str(i), foreground = "black")
+            textview.tag_configure(str(i), foreground = 'black')
             residue_select(i)
             selected_list[i] = True
 
@@ -485,14 +451,13 @@ def display_logo(app, query, residues, search_id, flag):
             # handle selection/deselection
             if(selected_list[i]):
                 textview.tag_configure(str(i), background ='black')
-                textview.tag_configure(str(i), foreground = "green2")
+                textview.tag_configure(str(i), foreground = 'green2')
                 residue_deselect(i)
                 selected_list[i] = False
                 start = i
-
             else:
                 textview.tag_configure(str(i), background ='green2')
-                textview.tag_configure(str(i), foreground = "black")
+                textview.tag_configure(str(i), foreground = 'black')
                 residue_select(i)
                 selected_list[i] = True
                 start = i
@@ -509,5 +474,100 @@ def display_logo(app, query, residues, search_id, flag):
     textview.bind("<Button-1>", mouse_down)
     textview.bind("<B1-Motion>", mouse_drag)
 
+    def saveFile():
+        f = tkFileDialog.asksaveasfile(mode='w', defaultextension=".eps")
+
+        # the user cancelled the save
+        if f is None:
+            print("Save cancelled")
+            return
+
+        print f.name
+
+        # get the EPS file from the server and write it
+        getLogoFile(f.name)
+        f.close()
+        print("Successfully saved")
+        plugin.status = 'SequenceLogo saved'
+        cmd.refresh_wizard()
+
+    def getLogoFile(filepath):
+        plugin.status = 'vector graphic requested'
+        cmd.refresh_wizard()
+
+        ext = filepath.split(".")[-1]
+
+        logoThread = LogoThread(
+            rmsd_cutoff,
+            query,
+            int(flag),
+            LOGOurl,
+            cmd,
+            filepath,
+            ext)
+        logoThread.start()
+        logoThread.join()
+
+        plugin.status = 'vector graphic received'
+        cmd.refresh_wizard()
+
+
+    menubar = Menu(window)
+    filemenu=Menu(menubar,tearoff=0)
+
+    filemenu.add_separator()
+    filemenu.add_command(label="Save", command=saveFile)
+    filemenu.add_separator()
+    filemenu.add_command(label="Exit", command=window.destroy)
+    menubar.add_cascade(label="File", menu=filemenu)
+
+    helpmenu=Menu(menubar,tearoff=0)
+    helpmenu.add_separator()
+    helpmenu.add_command(label="Help")
+    menubar.add_cascade(label="Help",menu=helpmenu)
+
+    window.config(menu=menubar)
+
     window.after(100, cmd.get_wizard().update())
     window.mainloop()
+
+
+'''
+Wrapper class for the MasterSearch client application
+'''
+def master_search(app):
+    """
+    MASTER search
+    """
+
+    # create a folder for storing temporary data
+    if not os.path.exists(MAIN_CACHE):
+        os.makedirs(MAIN_CACHE)
+
+    if not os.path.exists(SEARCH_CACHE):
+        os.makedirs(SEARCH_CACHE)
+
+    if not os.path.exists(LOGO_CACHE):
+        os.makedirs(LOGO_CACHE)
+
+    wiz = MasterSearch(app)
+    cmd.set_wizard(wiz)
+
+
+# add "master_search" as pymol command
+cmd.extend('master_search', master_search)
+
+# trick to get "wizard master_search" working
+sys.modules['pymol.wizard.master_search'] = sys.modules[__name__]
+
+try:
+    from pymol.plugins import addmenuitem
+
+    # add item to plugin menu
+    def __init_plugin__(self):
+        addmenuitem('MASTER Search v0.1', master_search(self))
+except:
+    def __init__(self):
+        self.menuBar.addmenuitem('Plugin', 'command', 'MASTER search',
+                                 label='MASTER search', command=master_search(self))
+
