@@ -114,20 +114,21 @@ def display_logo(app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
 
         # don't worry about the one you just selected
         if start != i:
+            start = i
 
             # handle selection/deselection
-            if(selected_list[i]):
+            if selected_list[i]:
                 textview.tag_configure(str(i), background ='black')
                 textview.tag_configure(str(i), foreground = 'green2')
                 residue_deselect(i)
                 selected_list[i] = False
-                start = i
+
             else:
                 textview.tag_configure(str(i), background ='green2')
                 textview.tag_configure(str(i), foreground = 'black')
                 residue_select(i)
                 selected_list[i] = True
-                start = i
+
 
     def residue_select(i):
         print 'click search chain '+residue_list[i][1]+' num '+residue_list[i][2]

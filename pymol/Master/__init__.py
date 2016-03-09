@@ -141,7 +141,7 @@ class MasterSearch(Wizard):
         self.cmd.refresh_wizard()
 
 
-    def set_mdatabase(self, database):
+    def set_database(self, database):
         """
         This is the method that will be called once the user has
         selected an database via the wizard menu.
@@ -194,11 +194,8 @@ class MasterSearch(Wizard):
         This method will create a wizard menu for the database to run the search with
         """
         database_menu = [[2, 'Database', '']]
-        database_menu.append([1, "Full Database", 'cmd.get_wizard().set_mdatabase("Full")'])
-        database_menu.append([1, "Test Database", 'cmd.get_wizard().set_mdatabase("Test")'])
-
-        #database_menu.append([1, "Full Database", 'print "full"'])
-        #database_menu.append([1, "Test Database", 'print "test"'])
+        database_menu.append([1, "Full Database", 'cmd.get_wizard().set_database("Full")'])
+        database_menu.append([1, "Test Database", 'cmd.get_wizard().set_database("Test")'])
 
         return database_menu
 
