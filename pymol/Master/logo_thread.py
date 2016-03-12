@@ -18,10 +18,10 @@ import traceback
 
 class LogoThread(threading.Thread):
     """
-    search thread allows the ui to remain responsive while this sends off the search request and waits
+    logo thread allows the ui to remain responsive while this sends off the logo request and waits
     """
 
-    def __init__(self, rmsd, search_id, flag, url, thecmd, logo_filepath = None, extension = "gif"):
+    def __init__(self, rmsd, search_id, flag, url, cmd, logo_filepath = None, extension = "gif"):
         """
         This is the constructor for our SearchThread.  Each time we perform
         a structural search, a new thread will be created.
@@ -33,13 +33,11 @@ class LogoThread(threading.Thread):
         self.rmsd_cutoff    = rmsd
         self.query          = search_id.strip()
         self.flag           = flag
-        self.seqs = []
-
-        # PyMOL routines keep their own copy of the 'cmd' object why?
-        self.cmd = thecmd
-
+        self.cmd = cmd
         self.logo_filepath = logo_filepath  # defalut value is None, will be set based on query name
         self.extension = extension
+
+        self.seqs = []
         self.url = url  # Currently selected host
         self.conn = None
         self.error = None
@@ -90,6 +88,7 @@ class LogoThread(threading.Thread):
             self.conn.setopt(pycurl.TIMEOUT, 1200)
             self.conn.setopt(pycurl.NOSIGNAL, 1)
 
+            # create JSON object with required info
             data = [
                 ('query', self.query),
                 ('flag', str(self.flag)),
@@ -120,6 +119,7 @@ class LogoThread(threading.Thread):
                             else:
                                 logo_filepath = self.logo_filepath
 
+                            # write to the specified filepath
                             logo_file = open(logo_filepath, 'wb')
                             logo_file.write(unencoded)
                             logo_file.close()
