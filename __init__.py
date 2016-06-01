@@ -59,6 +59,10 @@ class MasterSearch(Wizard):
         self.popup_app = None
         self.done_adding = False
         self.live_app = False
+        self.logo_flag = None
+        self.filename = None
+        self.res_info = None
+        
         
         self.update()
 
@@ -332,6 +336,20 @@ class MasterSearch(Wizard):
              self.prompt = [ 'Make a selection and then hit search...' ]
         elif (self.status == 'logo request launched'):
             self.prompt = [ 'Launched logo generation' ]
+        elif (self.status == 'vector graphic requested'):
+            self.prompt = [ 'Vector graphic requested' ]
+        elif (self.status == 'vector graphic received'):
+            self.prompt = [ 'Vector graphic received' ]
+        elif (self.status == 'Save Cancelled'):
+            self.prompt = [ 'Save Cancelled' ]
+        elif (self.status == 'rmsd not number'):
+            self.prompt = [ 'RMSD cutoff must be double' ]
+        elif (self.status == 'num matches not number'):
+            self.prompt = [ '# matches must be integer' ]
+        elif (self.status == 'residue selected'):
+            self.prompt = [ str(self.res_info) ]
+        elif (self.status == 'SequenceLogo saved'):
+            self.prompt = [ 'SequenceLogo saved as' + str(self.filename)]
         elif (self.status == 'logo request finished'):
             self.prompt = [ 'Received logo from server' ]
             self.status = [ 'waiting for selection' ]
