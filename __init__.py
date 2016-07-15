@@ -10,10 +10,8 @@ from pymol import cmd
 from search_thread import *
 from logo_thread import *
 from logo_popup import *
-#from Tkinter import *
-import Tkinter as tk
+from Tkinter import *
 from constants import *
-#from tk_trial2 import *
 
 URL = "http://ararat.cs.dartmouth.edu:5001/api/search"
 LOGOURL = "http://ararat.cs.dartmouth.edu:5001/api/logo"
@@ -41,8 +39,8 @@ class MasterSearch(Wizard):
         # default values for sequence logo UI
         self.operations = []
         self.searches = []
-        self.database = DATABASE_TEST
-        self.database_name = "Test"
+        self.database = DATABASE_FULL
+        self.database_name = "Full"
         self.search = None # current search action
         self.operation = None # current operation
 
@@ -56,10 +54,7 @@ class MasterSearch(Wizard):
         self.errorMessage = ''
         self.makeLogo = 0
         self.update()
-    
-        self.popup_app = None  #WindowApp(self.app)
-        #self.popup_app.mainloop()
-    
+
 
     def update(self):
         """
@@ -67,27 +62,10 @@ class MasterSearch(Wizard):
         This could include opening a window to show the logo, updating the progress
         bar of an ongoing search, displaying an error or other message from a search...
         """
-        #print "updating: " + str(self.makeLogo)
         if (self.makeLogo != 0):
-            if self.makeLogo == 1 or self.makeLogo == 2:
-                print "MAKELOGO: " + str(self.makeLogo)
-#                self.makeLogo = -self.makeLogo
-                self.launch_logo_search(self.makeLogo)
-                self.makeLogo = 0
-            
-            elif self.makeLogo == 3:
-                self.makeLogo = -1
-                print 1
-                myapp = WindowApp(self.app)
-                self.popup_app = myapp
-                print 2
-                self.popup_app.mainloop()
-                print 3
-#                display_search_window(self.app)
-                self.makeLogo = 0
+          self.launch_logo_search(self.makeLogo)
 
         self.app.root.after(100, self.update)
-
 
     def set_searchProgress(self, progress):
         """
@@ -117,11 +95,7 @@ class MasterSearch(Wizard):
         self.stop_search()
 
     def logo_helper(self, flag):
-        if (self.makeLogo < 0):
-          return
         self.makeLogo = flag
-        print "LOGO IS: " + str(self.makeLogo)
-
 
 
     def get_panel(self):
@@ -144,19 +118,27 @@ class MasterSearch(Wizard):
         self.menu['searches'] = select_search_menu
 
         # num is the type of display  1 is title only, 2 is button, 3 is dropdown
-        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)']]
-    
-    
+        return [
+            [1, 'MASTER Search Engine', ''],
+            [3, 'RMSD Cutoff: ' + str(self.rmsd_cutoff) + ' Angstroms', 'rmsd'],
+            [3, 'Max Matches: ' + str(self.number_of_structures) + ' results', 'num_structures'],
+            [3, 'Full Matches: ' + ['No', 'Yes'][self.full_match], 'full_matches'],
+            [3, 'Database: ' + self.database_name, 'database'],
+            [2, 'Search', 'cmd.get_wizard().launch_search()'],
+            [1, 'Sequence Logo', ''],
+            [3, 'Select Search: ' + str(self.search), 'searches'],
+            [2, 'Show Sequence Logo', 'cmd.get_wizard().logo_helper(1)'],
+            [2, 'Show Frequency Logo', 'cmd.get_wizard().logo_helper(2)'],
+            [2, 'Exit', 'cmd.set_wizard()']]
+
+
     def set_rmsd(self, rmsd):
         """
         This is the method that will be called once the user has
         selected an rmsd cutoff via the wizard menu.
         """
-        print 30
         self.rmsd_cutoff = rmsd
-        print 31
         self.cmd.refresh_wizard()
-        print 32
 
 
     def set_database(self, database):
@@ -245,28 +227,18 @@ class MasterSearch(Wizard):
         # print 'add new search'
         self.searches.append(search_id)
         self.cmd.refresh_wizard()
-        
-        # Fix the ID options in popup
-        self.popup_app.search_id.set(self.searches[0])
-        search_id = tk.OptionMenu(self.popup_app, self.popup_app.search_id, *self.searches).grid(row=10, column=0, rowspan=2, sticky=N+E+S+W)
-    
+
 
     def create_select_search_menu(self):
-
         select_search_menu = []
         select_search_menu.append([2, 'History', ''])
         for i in range(len(self.searches)):
             select_search_menu.append([1, 'id: '+self.searches[i], 'cmd.get_wizard().set_search('+str(i)+')'])
-
         return select_search_menu
 
 
     def set_search(self, i):
-        print "i: " + str(i)
-        print self.searches
-        print self.searches[int(i)]
         self.search = self.searches[int(i)]
-        print "GOT: " + str(self.search)
         self.cmd.refresh_wizard()
 
 
@@ -275,14 +247,13 @@ class MasterSearch(Wizard):
         launches the show logo operation in the separate thread
         does some basic checking and gets selection
         """
-#        flag = -flag
 
         if self.search is None:
             print 'please select target search'
+            self.makeLogo = 0
             return
-        
+
         else:
-            
             self.status = 'logo request launched'
             self.cmd.refresh_wizard()
 
@@ -294,7 +265,7 @@ class MasterSearch(Wizard):
                 self.cmd)
             self.logoThread.start()
             self.logoThread.join()
-           
+
             self.status = 'logo request finished'
             self.cmd.refresh_wizard()
             path = SEARCH_CACHE + str(self.search)
@@ -303,17 +274,7 @@ class MasterSearch(Wizard):
 
             query = self.dictionary[self.search]
             self.makeLogo = 0
-            print 899
-            
-            self.popup_app.display_menu_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, flag, self)
-            
-#            if flag==1:
-#                self.popup_app.frames['PageOne'].display_seq_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, self)
-#            elif flag==2:
-#                self.popup_app.frames['PageTwo'].display_freq_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, self)
-#
-#
-#            display_freq_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, flag, self)
+            display_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, flag, self)
 
 
     def stop_logo(self, message=''):
@@ -325,7 +286,7 @@ class MasterSearch(Wizard):
         launches the search in the separate thread
         does some basic checking and gets selection
         """
-        
+
         # gets the active selections from pymol
         active_selections = cmd.get_names('selections', 1)
         if len(active_selections) == 0:
@@ -333,7 +294,7 @@ class MasterSearch(Wizard):
         else:
 
             selection = active_selections[0]
-            print "The active selections are " + str(selection)
+            print "The active selections are" + str(selection)
             pdbstr = cmd.get_pdbstr(selection)
             print 'pdbstr is', pdbstr
             self.stop_search()
@@ -374,7 +335,6 @@ class MasterSearch(Wizard):
             self.prompt = [ 'Error: must have an active selection!' ]
             self.status = 'waiting for selection'
         return self.prompt
-
 
 
 '''
