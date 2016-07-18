@@ -118,20 +118,20 @@ class MasterSearch(Wizard):
         """
         sets up the main menu panel
         """
-        rmsd_menu = self.create_rmsd_menu()
-        self.menu['rmsd'] = rmsd_menu
-        num_structures_menu = self.create_num_structures_menu()
-        self.menu['num_structures'] = num_structures_menu
-        full_matches_menu = self.create_full_matches_menu()
-        self.menu['full_matches'] = full_matches_menu
-        database_menu = self.create_database_menu()
-        self.menu['database'] = database_menu
-
-        '''
-        sets up the menu ui for sequence logo
-        '''
-        select_search_menu = self.create_select_search_menu()
-        self.menu['searches'] = select_search_menu
+#        rmsd_menu = self.create_rmsd_menu()
+#        self.menu['rmsd'] = rmsd_menu
+#        num_structures_menu = self.create_num_structures_menu()
+#        self.menu['num_structures'] = num_structures_menu
+#        full_matches_menu = self.create_full_matches_menu()
+#        self.menu['full_matches'] = full_matches_menu
+#        database_menu = self.create_database_menu()
+#        self.menu['database'] = database_menu
+#
+#        '''
+#        sets up the menu ui for sequence logo
+#        '''
+#        select_search_menu = self.create_select_search_menu()
+#        self.menu['searches'] = select_search_menu
 
         # num is the type of display  1 is title only, 2 is button, 3 is dropdown
         return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'], [2, 'Exit', 'cmd.set_wizard()']]
