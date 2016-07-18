@@ -1,0 +1,17 @@
+#!/usr/bin/perl -w
+
+use PDB;
+use SEQUENCE;
+
+my $pdb = PDB::new(shift);
+
+my @seq;
+foreach my $ch (@{$pdb->{chain}}) {
+  foreach my $res (@{$ch->{res}}) {
+    my $aa = SEQUENCE::t2s($res->{resname}, -1);
+    $aa = "X" if ($aa eq -1);
+    push(@seq, "$aa,$ch->{id},$res->{resnum}");
+  }
+}
+
+print join(" ", @seq) . "\n";

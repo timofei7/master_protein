@@ -1,10 +1,10 @@
 #!/bin/bash
 
-kill -9 `cat /tmp/Nredis.pid`
-kill -9 `cat /tmp/Ngunicorn.pid` 
-kill -9 `cat /tmp/Nrqworker1.pid` 
-kill -9 `cat /tmp/Nrqworker2.pid` 
-kill -9 `cat /tmp/Nrqworker3.pid` 
-kill -9 `cat /tmp/Nrqworker4.pid` 
-kill -9 `cat /tmp/Nrqworker5.pid` 
-kill -9 `cat /tmp/Nrqworker6.pid` 
+kill -9 `cat /tmp/redis.pid`
+kill -9 `cat /tmp/gunicorn.pid` 
+kill -9 `cat /tmp/rqworker1.pid` 
+kill -9 `cat /tmp/rqworker2.pid` 
+kill -9 `cat /tmp/rqworker3.pid` 
+kill -9 `cat /tmp/rqworker4.pid` 
+kill -9 `cat /tmp/rqworker5.pid` 
+kill -9 `cat /tmp/rqworker6.pid` 
