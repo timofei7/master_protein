@@ -58,6 +58,7 @@ class MasterSearch(object):
         search_job = None
         tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])
         query_filepath = os.path.join(tempdir, secure_filename(query_file.filename))
+        sequence = ''
         try:
             # save file
             query_file.save(query_filepath)
@@ -65,8 +66,8 @@ class MasterSearch(object):
             search_job = self.qsearch(pdsfile, database, arguments)
             sequence = self.sequenceFromPDB(query_filepath)
         except Exception as e:
-            print("processing failed: " + e.message)
-            error = e.message
+            print("processing failed: ", e)
+            error = str(e)
 
         # cleanup all files
         # shutil.rmtree(tempdir, ignore_errors=True)
@@ -77,7 +78,7 @@ class MasterSearch(object):
         """
         get a formatted sequence string from the PDB file
         """
-        cmd = [self.app.config['SCRIPTS_PATH'], '/getSeq ', pdbfilepath]
+        cmd = [self.app.config['SCRIPTS_PATH']+'/getSeq', pdbfilepath]
         print("getting query sequence: " + ' '.join(cmd))
         seqStr, err = self.runCommand(cmd, "could not extract sequence from query PDB file")
         return seqStr

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -w -I/home/grigoryanlab/library/ProCEDe/branches/gevorg-branch/modules/
 
 use PDB;
 use SEQUENCE;
