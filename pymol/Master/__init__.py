@@ -281,11 +281,9 @@ class MasterSearch(Wizard):
            
             self.status = 'logo request finished'
             self.cmd.refresh_wizard()
-            path = SEARCH_CACHE + str(self.search)
-            with open(path, 'r') as f:
-                residues = f.readline().strip()
 
             query = self.jobIDs[self.search]
+            residues = self.qSeqs[self.search]
             self.makeLogo = 0
             
             self.popup_app.display_menu_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, flag, self)
