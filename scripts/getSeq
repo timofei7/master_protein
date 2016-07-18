@@ -3,7 +3,7 @@
 use PDB;
 use SEQUENCE;
 
-my $pdb = PDB::new(shift);
+my $pdb = PDB::new(shift, "PDB", undef, undef, "norename", 1);
 
 my @seq;
 foreach my $ch (@{$pdb->{chain}}) {
