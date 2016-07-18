@@ -120,6 +120,7 @@ class LogoThread(threading.Thread):
                                 logo_filepath = self.logo_filepath
 
                             # write to the specified filepath
+                            print "trying to write %s..." % logo_filepath
                             logo_file = open(logo_filepath, 'wb')
                             logo_file.write(unencoded)
                             logo_file.close()

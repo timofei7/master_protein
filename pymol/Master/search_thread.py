@@ -140,6 +140,8 @@ class SearchThread(threading.Thread):
                 try:
                     jsondata = json.loads(self.databuffer.getvalue())
                     if 'results' in jsondata:
+                        if 'qSeq' in jsondata:
+                            self.wiz.qSeqs[self.match_id] = base64.standard_b64decode(jsondata['qSeq'])
                         if 'matches' in jsondata:
                             for index, match in enumerate(jsondata['matches']):
                                 # uncompress and decode matches

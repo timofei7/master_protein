@@ -46,7 +46,8 @@ class MasterSearch(Wizard):
         self.search = None # current search action
         self.operation = None # current operation
 
-        self.dictionary = {}
+        self.jobIDs = {}
+        self.qSeqs = {}
 
         self.searchThread = None
         self.logoThread = None
@@ -133,7 +134,7 @@ class MasterSearch(Wizard):
         self.menu['searches'] = select_search_menu
 
         # num is the type of display  1 is title only, 2 is button, 3 is dropdown
-        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)']]
+        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'], [2, 'Exit', 'cmd.set_wizard()']]
     
     
     def set_rmsd(self, rmsd):
@@ -271,7 +272,7 @@ class MasterSearch(Wizard):
 
             self.logoThread = LogoThread(
                 self.rmsd_cutoff,
-                self.dictionary[self.search],
+                self.jobIDs[self.search],
                 int(flag),
                 self.LOGOurl,
                 self.cmd)
@@ -284,7 +285,7 @@ class MasterSearch(Wizard):
             with open(path, 'r') as f:
                 residues = f.readline().strip()
 
-            query = self.dictionary[self.search]
+            query = self.jobIDs[self.search]
             self.makeLogo = 0
             
             self.popup_app.display_menu_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, flag, self)
@@ -319,7 +320,7 @@ class MasterSearch(Wizard):
                 pdbstr,
                 self.url,
                 self.cmd,
-                self.dictionary)
+                self.jobIDs)
             self.searchThread.start()
             self.status = 'search launched'
             self.searchProgress = 0

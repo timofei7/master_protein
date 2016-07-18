@@ -58,7 +58,7 @@ def search():
         return jsonify({'error': 'no query file!'}), 201
 
     # start processing the query and give us some progress
-    search_job, tempdir, error = masterSearch.process(query_file, database, sanitized)
+    search_job, tempdir, qSeq, error = masterSearch.process(query_file, database, sanitized)
     if error:
         return jsonify({'error': error}), 201
 
@@ -93,7 +93,8 @@ def search():
                 yield json.dumps({'results': search_job.result,
                                   'tempdir': tempdir,
                                   'message': 'will be available for 24 hours',
-                                  'matches': matches})
+                                  'matches': matches},
+                                  'qSeq': qSeq)
                 # TODO: implement cleaning up files
 
     return Response(generate(),  mimetype='application/json')

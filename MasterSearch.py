@@ -63,6 +63,7 @@ class MasterSearch(object):
             query_file.save(query_filepath)
             pdsfile = self.pdb2pds(query_filepath)
             search_job = self.qsearch(pdsfile, database, arguments)
+            sequence = self.sequenceFromPDB(query_filepath)
         except Exception as e:
             print("processing failed: " + e.message)
             error = e.message
@@ -70,7 +71,18 @@ class MasterSearch(object):
         # cleanup all files
         # shutil.rmtree(tempdir, ignore_errors=True)
         # TODO: need to clean up the above somewhere later
-        return search_job, tempdir, error
+        return search_job, tempdir, sequence, error
+
+    def sequenceFromPDB(self, pdbfilepath):
+        """
+        get a formatted sequence string from the PDB file
+        """
+        try:
+            cmd = [self.app.config['SCRIPTS_PATH'], '/getSeq ', pdbfilepath]
+            print("getting query sequence: " + ' '.join(cmd))
+            seqStr, err = self.runCommand(cmd, "could not extract sequence from query PDB file")
+            return seqStr
+       
 
     def pdb2pds(self, pdbfilepath):
         """
@@ -85,20 +97,24 @@ class MasterSearch(object):
         try:
             cmd = [self.app.config['CREATEPDS_PATH'], '--type', 'query', '--pdb', pdbfilepath, '--pds', pdsfilename]
             print("attempting to convert: " + ' '.join(cmd))
-            p = subprocess.Popen(cmd,
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE,
-                                 stdin=subprocess.PIPE)
-            out, err = p.communicate()
-            # check for error
-            if re.search('Error:', out):
-                # might not return -1 so check for text here
-                err += out
-            if err:
-                raise Exception(err)
+            self.runCommand(cmd, "could not create PDS file from the query PDB file")
             return pdsfilename
+
+    def runCommand(self, cmd, errMessBase):
+        p = subprocess.Popen(cmd,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             stdin=subprocess.PIPE)
+        out, err = p.communicate()
+        # check for error
+        if re.search('Error:', out):
+            # might not return -1 so check for text here
+            err += out
+        if err:
+            raise Exception(err)
+        return out, err
         except Exception as e:
-            raise Exception("couldn't convert file from pdb2pds: " + e.message)
+            raise Exception(errMessBase + "\ncommand: " + cmd + "\n" + e.message)
 
     def qsearch(self, query_filepath, database, arguments):
         """
