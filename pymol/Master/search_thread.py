@@ -17,7 +17,6 @@ import pycurl
 import base64
 from StringIO import StringIO
 import traceback
-from util import *
 from constants import *
 
 
@@ -119,27 +118,6 @@ class SearchThread(threading.Thread):
 
             # create a new unique ID
             self.match_id = self.new_group_name();
-
-            # store query data
-            tmppath = SEARCH_CACHE + str(self.match_id)
-            tmp = open(tmppath, 'w+')
-            tmp.write(str(self.query))
-            tmp.close()
-
-            # get sequence from pdbstr
-            parser = PDBParser(tmppath)
-            res = parser.getSequence()
-            seq = []
-
-            # separate residue information
-            for residue in res:
-                tmpstr = ','.join(residue)
-                seq.append(tmpstr)
-            self.queryString = ' '.join(seq)
-
-            f = open(tmppath, 'w+')
-            f.write(self.queryString+'\n')
-            f.close()
 
             # create JSON data object
             data = [
