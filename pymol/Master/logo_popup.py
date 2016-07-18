@@ -194,7 +194,7 @@ class WindowApp():
 
         logoThread = LogoThread(
             cmd.get_wizard().rmsd_cutoff,
-            cmd.get_wizard().dictionary[cmd.get_wizard().search],
+            cmd.get_wizard().jobIDs[cmd.get_wizard().search],
             int(cmd.get_wizard().logo_flag),
             cmd.get_wizard().LOGOurl,
             cmd.get_wizard().cmd,
