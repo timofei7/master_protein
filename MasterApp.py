@@ -66,7 +66,7 @@ def search():
 
     # generator to provide updates and status to client
     def generate():
-        while search_job.get_status() != 'finished':
+        while True:
             time.sleep(1)
             if search_job.is_failed:
                 yield json.dumps({'error': 'failed'})
@@ -96,6 +96,7 @@ def search():
                                   'matches': matches,
                                   'qSeq': qSeq})
                 # TODO: implement cleaning up files
+                break
 
     return Response(generate(),  mimetype='application/json')
 
