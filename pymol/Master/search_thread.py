@@ -78,7 +78,7 @@ class SearchThread(threading.Thread):
             # for valueerror we just append cause this could be multiple packets
         except Exception as e:
             # stop on error
-            self.error = 'error processing response: ' + e.message
+            self.error = 'error processing response: ', e
             return -1  # will trigger a close
 
     def new_group_name(self):
@@ -141,7 +141,7 @@ class SearchThread(threading.Thread):
                     jsondata = json.loads(self.databuffer.getvalue())
                     if 'results' in jsondata:
                         if 'qSeq' in jsondata:
-                            self.wiz.qSeqs[self.match_id] = base64.standard_b64decode(jsondata['qSeq'])
+                            self.wizard.qSeqs[self.match_id] = str(jsondata['qSeq'])
                         if 'matches' in jsondata:
                             for index, match in enumerate(jsondata['matches']):
                                 # uncompress and decode matches
@@ -162,7 +162,7 @@ class SearchThread(threading.Thread):
                     self.cmd.get_wizard().add_new_search(self.match_id)
 
                 except Exception as e:
-                    print('error processing response: ' + e.message + "\nrawdata: " + str(self.databuffer.getvalue()))
+                    print('error processing response: ', e, "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
                 self.wizard.set_status('search complete')
 
