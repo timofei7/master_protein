@@ -93,8 +93,8 @@ def search():
                 yield json.dumps({'results': search_job.result,
                                   'tempdir': tempdir,
                                   'message': 'will be available for 24 hours',
-                                  'matches': matches},
-                                  'qSeq': qSeq)
+                                  'matches': matches,
+                                  'qSeq': qSeq})
                 # TODO: implement cleaning up files
 
     return Response(generate(),  mimetype='application/json')

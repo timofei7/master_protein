@@ -77,11 +77,10 @@ class MasterSearch(object):
         """
         get a formatted sequence string from the PDB file
         """
-        try:
-            cmd = [self.app.config['SCRIPTS_PATH'], '/getSeq ', pdbfilepath]
-            print("getting query sequence: " + ' '.join(cmd))
-            seqStr, err = self.runCommand(cmd, "could not extract sequence from query PDB file")
-            return seqStr
+        cmd = [self.app.config['SCRIPTS_PATH'], '/getSeq ', pdbfilepath]
+        print("getting query sequence: " + ' '.join(cmd))
+        seqStr, err = self.runCommand(cmd, "could not extract sequence from query PDB file")
+        return seqStr
        
 
     def pdb2pds(self, pdbfilepath):
@@ -94,25 +93,25 @@ class MasterSearch(object):
             return pdbfilepath
 
         pdsfilename = pdbfilepath.replace('.pdb', '.pds')
-        try:
-            cmd = [self.app.config['CREATEPDS_PATH'], '--type', 'query', '--pdb', pdbfilepath, '--pds', pdsfilename]
-            print("attempting to convert: " + ' '.join(cmd))
-            self.runCommand(cmd, "could not create PDS file from the query PDB file")
-            return pdsfilename
+        cmd = [self.app.config['CREATEPDS_PATH'], '--type', 'query', '--pdb', pdbfilepath, '--pds', pdsfilename]
+        print("attempting to convert: " + ' '.join(cmd))
+        self.runCommand(cmd, "could not create PDS file from the query PDB file")
+        return pdsfilename
 
     def runCommand(self, cmd, errMessBase):
-        p = subprocess.Popen(cmd,
-                             stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE,
-                             stdin=subprocess.PIPE)
-        out, err = p.communicate()
-        # check for error
-        if re.search('Error:', out):
-            # might not return -1 so check for text here
-            err += out
-        if err:
-            raise Exception(err)
-        return out, err
+        try:
+            p = subprocess.Popen(cmd,
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 stdin=subprocess.PIPE)
+            out, err = p.communicate()
+            # check for error
+            if re.search('Error:', out):
+                # might not return -1 so check for text here
+                err += out
+            if err:
+                raise Exception(err)
+            return out, err
         except Exception as e:
             raise Exception(errMessBase + "\ncommand: " + cmd + "\n" + e.message)
 
