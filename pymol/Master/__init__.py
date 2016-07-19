@@ -73,10 +73,15 @@ class MasterSearch(Wizard):
         This could include opening a window to show the logo, updating the progress
         bar of an ongoing search, displaying an error or other message from a search...
         """
-
         if self.makeLogo == 3 and self.live_app != True:
             self.popup_app = WindowApp(self.app)
             self.live_app = True
+        elif self.makeLogo == 1 and self.live_app == True:
+            self.popup_app.make_ids()  # search just completed, add item to dropdown list
+        elif self.makeLogo == 2 and self.live_app == True:
+            if (self.popup_app is not None):
+                self.popup_app.win.destroy()  # exit button pressed, close window
+                self.live_app = False
         
         self.makeLogo = 0
         self.app.root.after(100, self.update)
@@ -111,7 +116,6 @@ class MasterSearch(Wizard):
 
     def logo_helper(self, flag):
         self.makeLogo = flag
-    
 
 
     def get_panel(self):
@@ -134,7 +138,7 @@ class MasterSearch(Wizard):
 #        self.menu['searches'] = select_search_menu
 
         # num is the type of display  1 is title only, 2 is button, 3 is dropdown
-        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'], [2, 'Exit', 'cmd.set_wizard()']]
+        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'], [2, 'Exit', 'cmd.get_wizard().logo_helper(2); cmd.set_wizard()']]
     
     
     def set_rmsd(self, rmsd):
@@ -160,19 +164,6 @@ class MasterSearch(Wizard):
         self.cmd.refresh_wizard()
 
 
-    def create_rmsd_menu(self):
-        """
-        This method will create a wizard menu for the possible RMSD cutoff values.
-        Currently the values range from 0.1 to 2 A RMSD.
-        """
-        rmsd_menu = [[2, 'RMSD Cutoff', '']]
-        for rmsd_choice in range(1,21):
-            rmsd = float(rmsd_choice) / 10.0
-            rmsd_menu.append(
-                [1, str(rmsd), 'cmd.get_wizard().set_rmsd(' + str(rmsd) + ')'])
-        return rmsd_menu
-
-
     def set_num_structures(self, num_structures):
         """
         This is the method that will be called once the user
@@ -182,47 +173,11 @@ class MasterSearch(Wizard):
         self.cmd.refresh_wizard()
 
 
-    def create_num_structures_menu(self):
-        """
-        This method will create a wizard menu for the possible number of structures
-        to return.  Values range from 10 to 2000.
-        """
-        num_structures_menu = [[2, 'Number of Results', '']]
-        for n in [10, 20, 50, 100, 200, 500]:
-            num_structures_menu.append(
-                [1, str(n), 'cmd.get_wizard().set_num_structures(' + str(n) + ')'])
-        return num_structures_menu
-
-
-    def create_database_menu(self):
-        """
-        This method will create a wizard menu for the database to run the search with
-        """
-        database_menu = [[2, 'Database', '']]
-        database_menu.append([1, "Full Database", 'cmd.get_wizard().set_database("Full")'])
-        database_menu.append([1, "Test Database", 'cmd.get_wizard().set_database("Test")'])
-
-        return database_menu
-
-
     def set_full_matches(self, full_matches):
         """
         """
         self.full_match = full_matches
         self.cmd.refresh_wizard()
-
-
-    def create_full_matches_menu(self):
-        """
-        creates the wiard menu for the full matches boolean option
-        """
-        full_matches_menu = []
-        full_matches_menu.append([2, 'Full Matches', ''])
-        full_matches_menu.append(
-            [1, 'No', 'cmd.get_wizard().set_full_matches(False)'])
-        full_matches_menu.append(
-            [1, 'Yes', 'cmd.get_wizard().set_full_matches(True)'])
-        return full_matches_menu
 
 
     def add_new_search(self, search_id):
@@ -236,16 +191,6 @@ class MasterSearch(Wizard):
         # Trip flag for window
         self.done_adding = True
     
-
-
-    def create_select_search_menu(self):
-
-        select_search_menu = []
-        select_search_menu.append([2, 'History', ''])
-        for i in range(len(self.searches)):
-            select_search_menu.append([1, 'id: '+self.searches[i], 'cmd.get_wizard().set_search('+str(i)+')'])
-
-        return select_search_menu
 
 
     def set_search(self, i):
@@ -302,7 +247,7 @@ class MasterSearch(Wizard):
         # gets the active selections from pymol
         active_selections = cmd.get_names('selections', 1)
         if len(active_selections) == 0:
-            self.status = 'no selection'
+            self.set_status('no selection')
         else:
 
             selection = active_selections[0]
@@ -320,7 +265,7 @@ class MasterSearch(Wizard):
                 self.cmd,
                 self.jobIDs)
             self.searchThread.start()
-            self.status = 'search launched'
+            self.set_status('search launched')
             self.searchProgress = 0
         self.cmd.refresh_wizard()
 
@@ -328,6 +273,14 @@ class MasterSearch(Wizard):
         if self.searchThread:
             self.searchThread.stop(message)
     
+    def complete_search(self):
+        """
+        callback called by SearchThread when the
+        search is complete
+        """
+
+        self.set_status('search complete')
+        self.makeLogo = 1; # add search to menu
 
     def get_prompt(self):
         self.prompt = None
@@ -344,7 +297,7 @@ class MasterSearch(Wizard):
         elif (self.status == 'rmsd not number'):
             self.prompt = [ 'RMSD cutoff must be double' ]
         elif (self.status == 'num matches not number'):
-            self.prompt = [ '# matches must be integer' ]
+            self.prompt = [ 'matches must be integer' ]
         elif (self.status == 'residue selected'):
             self.prompt = [ str(self.res_info) ]
         elif (self.status == 'SequenceLogo saved'):

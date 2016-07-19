@@ -117,9 +117,6 @@ class WindowApp():
             
             # Reset flag
             cmd.get_wizard().done_adding = False
-        
-        # Repeat
-        cmd.get_wizard().app.root.after(100, self.make_ids)
 
     
     # Function to set flag and ID number

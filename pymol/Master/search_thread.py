@@ -164,7 +164,8 @@ class SearchThread(threading.Thread):
                 except Exception as e:
                     print('error processing response: ', e, "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
-                self.wizard.set_status('search complete')
+#                self.wizard.set_status('search complete')
+                self.wizard.complete_search()
 
         except Exception as e:
             # check for self.error as that would contain certain types of errors that weren't exceptions
