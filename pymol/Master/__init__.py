@@ -58,8 +58,10 @@ class MasterSearch(Wizard):
         self.makeLogo = 0
         
         self.popup_app = None
+        self.res_app = None
         self.done_adding = False
         self.live_app = False
+        self.res_live = False
         self.logo_flag = None
         self.filename = None
         self.res_info = None
@@ -82,7 +84,15 @@ class MasterSearch(Wizard):
             if (self.popup_app is not None):
                 self.popup_app.win.destroy()  # exit button pressed, close window
                 self.live_app = False
-        
+    
+    
+        # new code (Trevor, Ahsan, Anish)
+        elif self.makeLogo == 4 and self.res_app != True:
+            self.res_app = WindowApp(self.app)
+            self.res_live = True
+
+
+    
         self.makeLogo = 0
         self.app.root.after(100, self.update)
 
@@ -138,7 +148,7 @@ class MasterSearch(Wizard):
 #        self.menu['searches'] = select_search_menu
 
         # num is the type of display  1 is title only, 2 is button, 3 is dropdown
-        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'], [2, 'Exit', 'cmd.get_wizard().logo_helper(2); cmd.set_wizard()']]
+        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'],[2,'Redesign Residues','cmd.get_wizard().logo_helper(4)'],[2, 'Exit', 'cmd.get_wizard().logo_helper(2); cmd.set_wizard()']]
     
     
     def set_rmsd(self, rmsd):
