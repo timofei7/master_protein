@@ -256,7 +256,13 @@ class MasterSearch(Wizard):
         
         # gets the active selections from pymol
         active_selections = cmd.get_names('selections', 1)
+
+        # TODO: [Trevor, Anish Ahsan] --> here we can put the error checking code
+        # pseudocode:
+        # else if (selections from different groups):
+        #   self.set_status('different_groups')     ----> and then display msg accordingly
         if len(active_selections) == 0:
+            print len(active_selections)
             self.set_status('no selection')
         else:
 
