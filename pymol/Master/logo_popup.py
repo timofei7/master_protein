@@ -4,7 +4,8 @@ authors: Ben Scammell and Nick Fiacco
 import struct
 import Tkinter as tk
 from constants import *
-from logo_thread import *
+#from logo_thread import *
+from server_thread import *
 from pymol import cmd
 import math
 import tkFileDialog
@@ -188,7 +189,17 @@ class WindowApp():
         cmd.refresh_wizard()
 
         ext = filepath.split(".")[-1]
-
+        
+        logo_bundle = [2, cmd.get_wizard().rmsd_cutoff,
+                       cmd.get_wizard().jobIDs[cmd.get_wizard().search],
+                       int(cmd.get_wizard().logo_flag),
+                       cmd.get_wizard().LOGOurl,
+                       cmd.get_wizard().cmd,
+                       filepath,
+                       ext]
+        logoThread = LogoThread(logo_bundle)
+                                
+        """
         logoThread = LogoThread(
             cmd.get_wizard().rmsd_cutoff,
             cmd.get_wizard().jobIDs[cmd.get_wizard().search],
@@ -197,6 +208,7 @@ class WindowApp():
             cmd.get_wizard().cmd,
             filepath,
             ext)
+        """
             
         logoThread.start()
         logoThread.join()

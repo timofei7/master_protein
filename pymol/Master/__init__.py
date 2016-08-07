@@ -7,8 +7,7 @@ author:   Tim Tregubov, 12/2014
 
 from pymol.wizard import Wizard
 from pymol import cmd
-from search_thread import *
-from logo_thread import *
+from server_thread import *
 from logo_popup import *
 #from Tkinter import *
 import Tkinter as tk
@@ -65,6 +64,8 @@ class MasterSearch(Wizard):
         self.logo_flag = None
         self.filename = None
         self.res_info = None
+        self.logo_bundle = None
+        self.search_bundle = None
         
         
         self.update()
@@ -225,12 +226,21 @@ class MasterSearch(Wizard):
             self.status = 'logo request launched'
             self.cmd.refresh_wizard()
 
+            self.logo_bundle = [2, self.rmsd_cutoff,
+                     self.jobIDs[self.search],
+                     int(flag),
+                     self.LOGOurl,
+                     self.cmd]
+                     
+            self.logoThread = ServerThread(self.logo_bundle)
+            """
             self.logoThread = LogoThread(
                 self.rmsd_cutoff,
                 self.jobIDs[self.search],
                 int(flag),
                 self.LOGOurl,
                 self.cmd)
+            """
             self.logoThread.start()
             self.logoThread.join()
            
@@ -271,6 +281,19 @@ class MasterSearch(Wizard):
             pdbstr = cmd.get_pdbstr(selection)
             print 'pdbstr is', pdbstr
             self.stop_search()
+            
+            self.search_bundle = [1, self,
+                                  self.rmsd_cutoff,
+                                  self.number_of_structures,
+                                  self.full_match,
+                                  self.database,
+                                  pdbstr,
+                                  self.url,
+                                  self.cmd,
+                                  self.jobIDs]
+                                  
+            self.searchThread = ServerThread(self.search_bundle)
+            """
             self.searchThread = SearchThread(self,
                 self.rmsd_cutoff,
                 self.number_of_structures,
@@ -280,6 +303,7 @@ class MasterSearch(Wizard):
                 self.url,
                 self.cmd,
                 self.jobIDs)
+            """
             self.searchThread.start()
             self.set_status('search launched')
             self.searchProgress = 0
