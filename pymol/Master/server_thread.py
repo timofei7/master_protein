@@ -188,8 +188,8 @@ class ServerThread(threading.Thread):
                                 uncompressed = zlib.decompress(unencoded)
                                 header = uncompressed.splitlines()[0]
                                 phid = re.search('/(.*?).pds', header).group(1).split('/')
-                                hid = phid[len(phid)-1]  '.'  str(index)
-                                print('found: '  hid  ' '  header.split('pds')[1])
+                                hid = phid[len(phid)-1] + '.' + str(index)
+                                print('found: ' + hid + ' ' + header.split('pds')[1])
 
                                 # load the pdb and group
                                 self.cmd.read_pdbstr(str(uncompressed), hid)
@@ -206,9 +206,9 @@ class ServerThread(threading.Thread):
 
                             if self.logo_filepath == None:
                                 if self.flag == 1:
-                                    logo_filepath = LOGO_CACHE  str(self.query)'s.gif'
+                                    logo_filepath = LOGO_CACHE + str(self.query) + 's.gif'
                                 elif self.flag == 2:
-                                    logo_filepath = LOGO_CACHE  str(self.query)'f.gif'
+                                    logo_filepath = LOGO_CACHE + str(self.query) + 'f.gif'
                             else:
                                 logo_filepath = self.logo_filepath
 
@@ -221,7 +221,7 @@ class ServerThread(threading.Thread):
 
 
                 except Exception as e:
-                    print('error processing response: ', e, "\nrawdata: "  str(self.databuffer.getvalue()))
+                    print('error processing response: ', e, "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
 
                 if self.type == 'search':
@@ -230,9 +230,9 @@ class ServerThread(threading.Thread):
         except Exception as e:
             # check for self.error as that would contain certain types of errors that weren't exceptions
             if self.error:
-                print("Trouble posting request: "  self.error)
+                print("Trouble posting request: " + self.error)
             else:
-                print("Trouble posting request: "  e.message)
+                print("Trouble posting request: " + e.message)
                 print(traceback.format_exc())
 
         finally:
@@ -255,7 +255,7 @@ class ServerThread(threading.Thread):
                     try:
                         self.conn.close()
                     except Exception as e:
-                        print("ran into trouble closing the connection: "  e.message)
+                        print("ran into trouble closing the connection: " + e.message)
                 self.concurrency_management['ended'] = True
         finally:
             self.concurrency_management['lock'].release()
