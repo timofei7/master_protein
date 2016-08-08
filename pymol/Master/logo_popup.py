@@ -189,26 +189,16 @@ class WindowApp():
         cmd.refresh_wizard()
 
         ext = filepath.split(".")[-1]
-        
-        logo_bundle = [2, cmd.get_wizard().rmsd_cutoff,
-                       cmd.get_wizard().jobIDs[cmd.get_wizard().search],
-                       int(cmd.get_wizard().logo_flag),
-                       cmd.get_wizard().LOGOurl,
-                       cmd.get_wizard().cmd,
-                       filepath,
-                       ext]
-        logoThread = LogoThread(logo_bundle)
-                                
-        """
+            
+        cmd.get_wizard().status = 'logo file request launched'
+        cmd.refresh_wizard()
         logoThread = LogoThread(
-            cmd.get_wizard().rmsd_cutoff,
             cmd.get_wizard().jobIDs[cmd.get_wizard().search],
             int(cmd.get_wizard().logo_flag),
-            cmd.get_wizard().LOGOurl,
+            cmd.get_wizard().serverURL,
             cmd.get_wizard().cmd,
             filepath,
             ext)
-        """
             
         logoThread.start()
         logoThread.join()
@@ -217,7 +207,7 @@ class WindowApp():
         cmd.refresh_wizard()
 
     
-    def display_menu_logo(self, app, query, residues, rmsd_cutoff, LOGOurl, flag, plugin):
+    def display_menu_logo(self, app, query, residues, rmsd_cutoff, flag, plugin):
         """
         This method handles creating a SequenceLogo UI with Tkinter
         author = Ben + Nick
