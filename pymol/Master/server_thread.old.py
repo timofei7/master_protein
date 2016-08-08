@@ -38,27 +38,27 @@ class ServerThread(threading.Thread):
         if self.thread_type[0] == 1:
 
             self.type = 'search'
-            self.wizard = self.thread_type[1]
-            self.rmsd_cutoff = self.thread_type[2]
-            self.num_structures = self.thread_type[3]
-            self.full_matches   = self.thread_type[4]
-            self.database = self.thread_type[5]
-            self.query = self.thread_type[6]
-            self.url = self.thread_type[7]
-            self.cmd = self.thread_type[8]
-            self.dictionary = self.thread_type[9]
-            self.match_id = ''
+            self.wizard = self.thread_type[1]           # needed for progress handler, error handler, post-processor, and finish handler
+            self.rmsd_cutoff = self.thread_type[2]      # only needed for data
+            self.num_structures = self.thread_type[3]   # only needed for data
+            self.full_matches   = self.thread_type[4]   # only needed for data
+            self.database = self.thread_type[5]         # only needed for data
+            self.query = self.thread_type[6]            # needed for data and a tiny bit of processing
+            self.url = self.thread_type[7]              # only needed to set up connection, should be parameter of constructor
+            self.cmd = self.thread_type[8]              # only needed for processing the response
+            self.dictionary = self.thread_type[9]       # only needed for processing the response
+            self.match_id = ''                          # only needed for processing the response
 
         # Search thread variables
         if self.thread_type[0] == 2:
 
             self.type = 'logo'
-            self.rmsd_cutoff = self.thread_type[1]
-            self.query = self.thread_type[2].strip()
-            self.flag = self.thread_type[3]
-            self.url = self.thread_type[4]
-            self.cmd = self.thread_type[5]
-            self.seqs = []
+            self.rmsd_cutoff = self.thread_type[1]      # only needed for data
+            self.query = self.thread_type[2].strip()    # needed for data and a tiny bit of processing
+            self.flag = self.thread_type[3]             # only needed for data and pos-processing
+            self.url = self.thread_type[4]              # only needed to set up connection, should be parameter of constructor
+            self.cmd = self.thread_type[5]              # only needed for processing the response
+            self.seqs = []                              # not used
 
             if len(self.thread_type) > 6:
                 self.logo_filepath = self.thread_type[6]  # defalut value is None, will be set based on query name
