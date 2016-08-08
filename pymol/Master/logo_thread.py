@@ -22,7 +22,7 @@ class LogoThread(ServerThread):
     logo thread allows the ui to remain responsive while this sends off the logo request and waits
     """
 
-    def __init__(self, search_id, flag, url, cmd, logo_filepath = None, extension = "gif"):
+    def __init__(self, search_id, flag, serverURL, cmd, logo_filepath = None, extension = "gif"):
         self.query          = search_id.strip()
         self.flag           = flag
         self.cmd            = cmd
@@ -34,7 +34,7 @@ class LogoThread(ServerThread):
                 ('rmsdCut', "999"),
                 ('ext', self.extension)
         ]
-        super(LogoThread, self).__init__(url, data)
+        super(LogoThread, self).__init__(serverURL + '/api/logo', data)
 
     # --------------- Overridden functions from base class --------------- #
     def error_handler(self, mess):

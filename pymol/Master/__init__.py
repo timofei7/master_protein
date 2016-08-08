@@ -9,17 +9,12 @@ from pymol.wizard import Wizard
 from pymol import cmd
 from server_thread import *
 from logo_popup import *
-#from Tkinter import *
 import Tkinter as tk
 from constants import *
-#from tk_trial2 import *
 
 from server_thread import *
 from search_thread import *
 from logo_thread import *
-
-URL = "http://ararat.cs.dartmouth.edu:5001/api/search"
-LOGOURL = "http://ararat.cs.dartmouth.edu:5001/api/logo"
 
 class MasterSearch(Wizard):
     """
@@ -36,8 +31,7 @@ class MasterSearch(Wizard):
         self.rmsd_cutoff = 1.0
         self.number_of_structures = 25
         self.full_match = False
-        self.url = URL
-        self.LOGOurl = LOGOURL
+        self.serverURL = "http://ararat.cs.dartmouth.edu:5001"
 
         self.ref = Wizard
 
@@ -56,6 +50,7 @@ class MasterSearch(Wizard):
         self.logoThread = None
 
         self.status = 'waiting for selection'
+        self.statusPrompt = None
         self.searchProgress = 0.0
         self.errorMessage = ''
         self.makeLogo = 0
@@ -99,11 +94,12 @@ class MasterSearch(Wizard):
         self.searchProgress = progress
         self.cmd.refresh_wizard()
 
-    def set_status(self, status):
+    def set_status(self, status, prompt = None):
         """
         Setter for status
         """
         self.status = status
+        self.statusPrompt = prompt
         self.cmd.refresh_wizard()
 
     def set_errorMessage(self, mes):
@@ -224,7 +220,7 @@ class MasterSearch(Wizard):
             self.logoThread = LogoThread(
                 self.jobIDs[self.search],
                 int(flag),
-                self.LOGOurl,
+                self.serverURL,
                 self.cmd)
             self.logoThread.start()
             self.logoThread.join()
@@ -236,7 +232,7 @@ class MasterSearch(Wizard):
             residues = self.qSeqs[self.search]
             self.makeLogo = 0
             
-            self.popup_app.display_menu_logo(self.app, query, residues, self.rmsd_cutoff, self.LOGOurl, flag, self)
+            self.popup_app.display_menu_logo(self.app, query, residues, self.rmsd_cutoff, flag, self)
 
 
     def stop_logo(self, message=''):
@@ -263,7 +259,7 @@ class MasterSearch(Wizard):
 
             self.searchThread = SearchThread(self, self.rmsd_cutoff,
                                 self.number_of_structures, self.full_match,
-                                self.database, pdbstr, self.url, self.cmd, self.jobIDs)
+                                self.database, pdbstr, self.serverURL, self.cmd, self.jobIDs)
             self.searchThread.start()
             self.set_status('search launched')
             self.searchProgress = 0
@@ -273,46 +269,56 @@ class MasterSearch(Wizard):
         if self.searchThread:
             self.searchThread.stop(message)
     
-    def complete_search(self):
+    def complete_search(self, numMatches = -1):
         """
         callback called by SearchThread when the
         search is complete
         """
 
-        self.set_status('search complete')
+        if (numMatches >= 0):
+            print "number of matches = ", numMatches
+            self.set_status('search complete', 'Search complete, %d matches' % numMatches)
+                #            self.set_status('search complete')
+        else:
+            self.set_status('search complete')
         self.makeLogo = 1; # add search to menu
 
     def get_prompt(self):
-        self.prompt = None
+        defaultPrompt = ''
         if (self.status == 'waiting for selection'):
-             self.prompt = [ 'Make a selection and then hit search...' ]
+             defaultPrompt = [ 'Make a selection and then hit search...' ]
         elif (self.status == 'logo request launched'):
-            self.prompt = [ 'Launched logo generation' ]
+            defaultPrompt = [ 'Launched logo generation' ]
         elif (self.status == 'vector graphic requested'):
-            self.prompt = [ 'Vector graphic requested' ]
+            defaultPrompt = [ 'Vector graphic requested' ]
         elif (self.status == 'vector graphic received'):
-            self.prompt = [ 'Vector graphic received' ]
+            defaultPrompt = [ 'Vector graphic received' ]
         elif (self.status == 'Save Cancelled'):
-            self.prompt = [ 'Save Cancelled' ]
+            defaultPrompt = [ 'Save Cancelled' ]
         elif (self.status == 'rmsd not number'):
-            self.prompt = [ 'RMSD cutoff must be double' ]
+            defaultPrompt = [ 'RMSD cutoff must be double' ]
         elif (self.status == 'num matches not number'):
-            self.prompt = [ 'matches must be integer' ]
+            defaultPrompt = [ 'matches must be integer' ]
         elif (self.status == 'residue selected'):
-            self.prompt = [ str(self.res_info) ]
+            defaultPrompt = [ str(self.res_info) ]
         elif (self.status == 'SequenceLogo saved'):
-            self.prompt = [ 'SequenceLogo saved as' + str(self.filename)]
+            defaultPrompt = [ 'SequenceLogo saved as ' + str(self.filename)]
         elif (self.status == 'logo request finished'):
-            self.prompt = [ 'Received logo from server' ]
+            defaultPrompt = [ 'Received logo from server' ]
             self.status = [ 'waiting for selection' ]
         elif (self.status == 'search launched'):
-            self.prompt = [ 'Searching (%d%%)...' % round(100*self.searchProgress)  ]
+            defaultPrompt = [ 'Searching (%d%%)...' % round(100*self.searchProgress)  ]
         elif (self.status == 'search complete'):
-            self.prompt = [ 'Search complete...' ]
+            defaultPrompt = [ 'Search complete...' ]
             self.status = 'waiting for selection'
         elif (self.status == 'no selection'):
-            self.prompt = [ 'Error: must have an active selection!' ]
+            defaultPrompt = [ 'Error: must have an active selection!' ]
             self.status = 'waiting for selection'
+
+        if (self.statusPrompt is None):
+            self.prompt = defaultPrompt
+        else:
+            self.prompt = [self.statusPrompt]
         return self.prompt
 
 '''

@@ -25,8 +25,7 @@ class SearchThread(ServerThread):
     search thread allows the ui to remain responsive while this sends off the search request and waits
     """
 
-    def __init__(
-            self, wiz, rmsd, num_struct, full_matches, database, pdbstrs, url, thecmd, dictionary):
+    def __init__(self, wiz, rmsd, num_struct, full_matches, database, pdbstrs, serverURL, thecmd, dictionary):
 
         self.dictionary = dictionary
         self.wizard         = wiz
@@ -41,7 +40,7 @@ class SearchThread(ServerThread):
                 ("bbRMSD", "on"),
                 ("rmsdCut", str(rmsd))
                ]
-        super(SearchThread, self).__init__(url, data)
+        super(SearchThread, self).__init__(serverURL + '/api/search', data)
 
 
     def new_group_name(self):
@@ -65,6 +64,7 @@ class SearchThread(ServerThread):
         self.wizard.set_status('Error: ' + mess)
 
     def results_handler(self, jsondata):
+        numMatches = 0
         if 'results' in jsondata:
             if 'qSeq' in jsondata:
                 self.wizard.qSeqs[self.match_id] = str(jsondata['qSeq'])
@@ -81,12 +81,16 @@ class SearchThread(ServerThread):
                     # load the pdb and group
                     self.cmd.read_pdbstr(str(uncompressed), hid)
                     self.cmd.group(self.match_id, hid)
+                    numMatches = numMatches + 1
 
                 self.dictionary[self.match_id] = str(jsondata['tempdir']).split('/')[-1]
 
         # add current search to search history
-        self.cmd.get_wizard().add_new_search(self.match_id)
+        self.setReturn(numMatches)
+        if (numMatches):
+                    self.cmd.get_wizard().add_new_search(self.match_id)
 
-    def on_finish(self):
-        self.wizard.complete_search()
+    def on_finish(self, numMatches):
+        self.wizard.complete_search(numMatches)
+
     # -------- End of overridden functions from base class --------------- #

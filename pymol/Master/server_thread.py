@@ -33,6 +33,7 @@ class ServerThread(threading.Thread):
         self.databuffer = StringIO()
         self.url = _url
         self.data = _data
+        self.returnObj = None
         self.conn = None
         self.error = None
         self.concurrency_management = {'begun': False,  # True once the thread begins consuming
@@ -46,24 +47,19 @@ class ServerThread(threading.Thread):
         """
         try:
             jsondata = json.loads(streamdata)
-            print "GG got data: ", jsondata
             if 'progress' in jsondata:
                 if not jsondata['progress'] == "":
                     progs = jsondata['progress'].strip()
                     self.progress_handler(progs)
             elif 'error' in jsondata:
-                print "GG got error!"
                 self.error_handler(jsondata['error'])
             else:
-                print "GG will continue reading..."
                 self.databuffer.write(streamdata.strip())
                 # append to databuffer cause sometimes packets for results span multiple calls
         except ValueError:
-            print "GG will continue reading (ValueError)..."
             self.databuffer.write(streamdata.strip())
             # for valueerror we just append cause this could be multiple packets
         except Exception as e:
-            print "GG ERROR: ", e
             # stop on error
             self.error = 'error processing response: ', e
             return -1  # will trigger a close
@@ -91,13 +87,19 @@ class ServerThread(threading.Thread):
         print "error: %s", mess
         print "override this method to act upon this error"
 
-    def on_finish(self):
+    def on_finish(self, returnObj):
         """
            This method gets called right after the thread is about done.
            Override this method if you want anything intelligent to happen.
         """
         return True
 
+    def setReturn(self, ret):
+        """
+        Prepare info for return from thread.
+        """
+        self.returnObj = ret
+        
     def run(self):
         """
             This method will send the search request to the server
@@ -131,7 +133,6 @@ class ServerThread(threading.Thread):
             if not self.error:
                 # now we parse our databuffer
                 # once we're done check the stringbuffer for the complete json matches
-                print "GG, got to this point!"
                 try:
                     jsondata = json.loads(self.databuffer.getvalue())
                     self.results_handler(jsondata)
@@ -139,7 +140,7 @@ class ServerThread(threading.Thread):
                     print('error processing response: ', e, "\nrawdata: " + str(self.databuffer.getvalue()))
                     print(traceback.format_exc())
 
-                self.on_finish()
+                self.on_finish(self.returnObj)
 
         except Exception as e:
             # check for self.error as that would contain certain types of errors that weren't exceptions
