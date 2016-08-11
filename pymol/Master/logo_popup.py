@@ -1,5 +1,5 @@
 '''
-authors: Ben Scammell and Nick Fiacco
+authors: Ben Scammell and Nick Fiacco (and TREVOR!!!!)
 '''
 import struct
 import Tkinter as tk
