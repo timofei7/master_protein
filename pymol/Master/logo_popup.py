@@ -6,6 +6,8 @@ import Tkinter as tk
 from constants import *
 #from logo_thread import *
 from server_thread import *
+from logo_thread import *
+from search_thread import *
 from pymol import cmd
 import math
 import tkFileDialog
@@ -30,6 +32,8 @@ class WindowApp():
         self.win = tk.Toplevel(app.root)
         self.win.protocol("WM_DELETE_WINDOW", self.callback)
         self.win.title('MASTER Search')
+        
+        self.win.searchThread = None
         
         # Instance variables to be used in logos
         self.win.start = None
@@ -162,7 +166,38 @@ class WindowApp():
             cmd.get_wizard().set_full_matches(True)
 
         # Launch the search
-        cmd.get_wizard().launch_search()
+        self.launch_search()
+
+    def launch_search(self):
+        """
+        launches the search in the separate thread
+        does some basic checking and gets selection
+        """
+        
+        # gets the active selections from pymol
+        active_selections = cmd.get_names('selections', 1)
+        if len(active_selections) == 0:
+            cmd.get_wizard().set_status('no selection')
+        else:
+
+            selection = active_selections[0]
+            print "The active selections are " + str(selection)
+            pdbstr = cmd.get_pdbstr(selection)
+            print 'pdbstr is', pdbstr
+            self.stop_search()
+            
+            search_bundle = [1, self, self.rmsd_cutoff, self.number_of_structures, self.full_match, self.database, pdbstr, self.url, self.cmd, self.jobIDs]
+            
+            self.searchThread = ServerThread(search_bundle)
+   
+            self.searchThread.start()
+            self.set_status('search launched')
+            self.searchProgress = 0
+        self.cmd.refresh_wizard()
+
+    def stop_search(self, message=''):
+        if self.win.searchThread:
+            self.win.searchThread.stop(message)
 
     def saveFile(self):
 

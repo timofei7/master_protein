@@ -249,37 +249,37 @@ class MasterSearch(Wizard):
         if self.logoThread:
             self.logoThread.stop(message)
 
-    def launch_search(self):
-        """
-        launches the search in the separate thread
-        does some basic checking and gets selection
-        """
-        
-        # gets the active selections from pymol
-        active_selections = cmd.get_names('selections', 1)
-        if len(active_selections) == 0:
-            self.set_status('no selection')
-        else:
+#    def launch_search(self):
+#        """
+#        launches the search in the separate thread
+#        does some basic checking and gets selection
+#        """
+#        
+#        # gets the active selections from pymol
+#        active_selections = cmd.get_names('selections', 1)
+#        if len(active_selections) == 0:
+#            self.set_status('no selection')
+#        else:
+#
+#            selection = active_selections[0]
+#            print "The active selections are " + str(selection)
+#            pdbstr = cmd.get_pdbstr(selection)
+#            print 'pdbstr is', pdbstr
+#            self.stop_search()
+#            
+#            search_bundle = [1, self, self.rmsd_cutoff, self.number_of_structures, self.full_match, self.database, pdbstr, self.url, self.cmd, self.jobIDs]
+#            
+#            self.searchThread = ServerThread(search_bundle)
+#   
+#            self.searchThread.start()
+#            self.set_status('search launched')
+#            self.searchProgress = 0
+#        self.cmd.refresh_wizard()
 
-            selection = active_selections[0]
-            print "The active selections are " + str(selection)
-            pdbstr = cmd.get_pdbstr(selection)
-            print 'pdbstr is', pdbstr
-            self.stop_search()
-            
-            search_bundle = [1, self, self.rmsd_cutoff, self.number_of_structures, self.full_match, self.database, pdbstr, self.url, self.cmd, self.jobIDs]
-            
-            self.searchThread = ServerThread(search_bundle)
-   
-            self.searchThread.start()
-            self.set_status('search launched')
-            self.searchProgress = 0
-        self.cmd.refresh_wizard()
+#    def stop_search(self, message=''):
+#        if self.searchThread:
+#            self.searchThread.stop(message)
 
-    def stop_search(self, message=''):
-        if self.searchThread:
-            self.searchThread.stop(message)
-    
     def complete_search(self):
         """
         callback called by SearchThread when the
