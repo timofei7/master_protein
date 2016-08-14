@@ -254,19 +254,32 @@ class MasterSearch(Wizard):
         launches the search in the separate thread
         does some basic checking and gets selection
         """
+        # boolean used for check on proper protein object selection
+        run = True
+        
         
         # gets the active selections from pymol
         active_selections = cmd.get_names('selections', 1)
+        
+        protein_selections = cmd.get_object_list('all')
+        
+        #testing
+        print "object length is" + str(len(active_selections))
+        print "protein object length is" + str(len(protein_selections))
 
         # TODO: [Trevor, Anish Ahsan] --> here we can put the error checking code
         # pseudocode:
         # else if (selections from different groups):
         #   self.set_status('different_groups')     ----> and then display msg accordingly
         if len(active_selections) == 0:
-            print len(active_selections)
             self.set_status('no selection')
-        else:
+        
+        # Error handling for multiple objects selected (disallowed)
+        if len(protein_selections) > 1:
+            run = False
+            self.set_status('multiple objects')
 
+        else:
             selection = active_selections[0]
             print "The active selections are " + str(selection)
             pdbstr = cmd.get_pdbstr(selection)
@@ -279,7 +292,10 @@ class MasterSearch(Wizard):
             self.searchThread.start()
             self.set_status('search launched')
             self.searchProgress = 0
-        self.cmd.refresh_wizard()
+        
+        if(run):
+            print "refreshing"
+            self.cmd.refresh_wizard()
 
     def stop_search(self, message=''):
         if self.searchThread:
@@ -330,6 +346,10 @@ class MasterSearch(Wizard):
         elif (self.status == 'no selection'):
             defaultPrompt = [ 'Error: must have an active selection!' ]
             self.status = 'waiting for selection'
+        elif (self.status == 'multiple objects'):
+            defaultPrompt = [ 'Error: multiple objects disallowed!' ]
+            self.status = 'waiting for selection'
+
 
         if (self.statusPrompt is None):
             self.prompt = defaultPrompt
