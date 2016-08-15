@@ -11,7 +11,6 @@ from server_thread import *
 from logo_popup import *
 import Tkinter as tk
 from constants import *
-
 from server_thread import *
 from search_thread import *
 from logo_thread import *
@@ -26,45 +25,17 @@ class MasterSearch(Wizard):
         # Clean the slate
         self.cmd.unpick()
         self.app = app
-
-        # Default values
-        self.rmsd_cutoff = 1.0
-        self.number_of_structures = 25
-        self.full_match = False
-        self.serverURL = "http://ararat.cs.dartmouth.edu:5001"
-
         self.ref = Wizard
-
-        # default values for sequence logo UI
-        self.operations = []
-        self.searches = []
-        self.database = DATABASE_TEST
-        self.database_name = "Test"
-        self.search = None # current search action
-        self.operation = None # current operation
-
-        self.jobIDs = {}
-        self.qSeqs = {}
-
-        self.searchThread = None
-        self.logoThread = None
 
         self.status = 'waiting for selection'
         self.statusPrompt = None
         self.searchProgress = 0.0
         self.errorMessage = ''
         self.makeLogo = 0
-        
+
         self.popup_app = None
-        self.done_adding = False
         self.live_app = False
-        self.logo_flag = None
-        self.filename = None
-        self.res_info = None
-        self.logo_bundle = None
-        self.search_bundle = None
-        
-        
+
         self.update()
 
     def update(self):
@@ -113,175 +84,19 @@ class MasterSearch(Wizard):
         Once we are done with the wizard, we should set various pymol
         parameters back to their original values.
         """
-        self.stop_search()
+        self.popup_app.stop_search()
 
     def logo_helper(self, flag):
         self.makeLogo = flag
-
 
     def get_panel(self):
         """
         sets up the main menu panel
         """
-#        rmsd_menu = self.create_rmsd_menu()
-#        self.menu['rmsd'] = rmsd_menu
-#        num_structures_menu = self.create_num_structures_menu()
-#        self.menu['num_structures'] = num_structures_menu
-#        full_matches_menu = self.create_full_matches_menu()
-#        self.menu['full_matches'] = full_matches_menu
-#        database_menu = self.create_database_menu()
-#        self.menu['database'] = database_menu
-#
-#        '''
-#        sets up the menu ui for sequence logo
-#        '''
-#        select_search_menu = self.create_select_search_menu()
-#        self.menu['searches'] = select_search_menu
 
         # num is the type of display  1 is title only, 2 is button, 3 is dropdown
         return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'], [2, 'Exit', 'cmd.get_wizard().logo_helper(2); cmd.set_wizard()']]
     
-    
-    def set_rmsd(self, rmsd):
-        """
-        This is the method that will be called once the user has
-        selected an rmsd cutoff via the wizard menu.
-        """
-        self.rmsd_cutoff = rmsd
-        self.cmd.refresh_wizard()
-
-
-    def set_database(self, database):
-        """
-        This is the method that will be called once the user has
-        selected an database via the wizard menu.
-        """
-        if(database == "Full"):
-            self.database = DATABASE_FULL
-            self.database_name = "Full"
-        elif(database == "Test"):
-            self.database = DATABASE_TEST
-            self.database_name = "Test"
-        self.cmd.refresh_wizard()
-
-
-    def set_num_structures(self, num_structures):
-        """
-        This is the method that will be called once the user
-        has set the maximum number of structures to return.
-        """
-        self.number_of_structures = num_structures
-        self.cmd.refresh_wizard()
-
-
-    def set_full_matches(self, full_matches):
-        """
-        """
-        self.full_match = full_matches
-        self.cmd.refresh_wizard()
-
-
-    def add_new_search(self, search_id):
-        '''
-        add current search to search history after it finishes
-        '''
-        # print 'add new search'
-        self.searches.append(search_id)
-        self.cmd.refresh_wizard()
-
-        # Trip flag for window
-        self.done_adding = True
-        self.makeLogo = 1
-    
-
-
-    def set_search(self, i):
-        
-        self.search = self.searches[int(i)]
-        print self.search
-        self.cmd.refresh_wizard()
-
-
-    def launch_logo_search(self, flag):
-        """
-        launches the show logo operation in the separate thread
-        does some basic checking and gets selection
-        """
-
-        if self.search is None:
-            print 'please select target search'
-            return
-        
-        else:
-            
-            self.status = 'logo request launched'
-            self.cmd.refresh_wizard()
-
-            self.logoThread = LogoThread(
-                self.jobIDs[self.search],
-                int(flag),
-                self.serverURL,
-                self.cmd)
-            self.logoThread.start()
-            self.logoThread.join()
-           
-            self.status = 'logo request finished'
-            self.cmd.refresh_wizard()
-
-            query = self.jobIDs[self.search]
-            residues = self.qSeqs[self.search]
-            self.makeLogo = 0
-            
-            self.popup_app.display_menu_logo(self.app, query, residues, self.rmsd_cutoff, flag, self)
-
-
-    def stop_logo(self, message=''):
-        if self.logoThread:
-            self.logoThread.stop(message)
-
-    def launch_search(self):
-        """
-        launches the search in the separate thread
-        does some basic checking and gets selection
-        """
-        
-        # gets the active selections from pymol
-        active_selections = cmd.get_names('selections', 1)
-        if len(active_selections) == 0:
-            self.set_status('no selection')
-        else:
-
-            selection = active_selections[0]
-            print "The active selections are " + str(selection)
-            pdbstr = cmd.get_pdbstr(selection)
-            print 'pdbstr is', pdbstr
-            self.stop_search()
-
-            self.searchThread = SearchThread(self, self.rmsd_cutoff,
-                                self.number_of_structures, self.full_match,
-                                self.database, pdbstr, self.serverURL, self.cmd, self.jobIDs)
-            self.searchThread.start()
-            self.set_status('search launched')
-            self.searchProgress = 0
-        self.cmd.refresh_wizard()
-
-    def stop_search(self, message=''):
-        if self.searchThread:
-            self.searchThread.stop(message)
-    
-    def complete_search(self, numMatches = -1):
-        """
-        callback called by SearchThread when the
-        search is complete
-        """
-
-        if (numMatches >= 0):
-            print "number of matches = ", numMatches
-            self.set_status('search complete', 'Search complete, %d matches' % numMatches)
-                #            self.set_status('search complete')
-        else:
-            self.set_status('search complete')
-        self.makeLogo = 1; # add search to menu
 
     def get_prompt(self):
         defaultPrompt = ''
@@ -300,9 +115,9 @@ class MasterSearch(Wizard):
         elif (self.status == 'num matches not number'):
             defaultPrompt = [ 'matches must be integer' ]
         elif (self.status == 'residue selected'):
-            defaultPrompt = [ str(self.res_info) ]
+            defaultPrompt = [ str(self.popup_app.win.res_info) ]
         elif (self.status == 'SequenceLogo saved'):
-            defaultPrompt = [ 'SequenceLogo saved as ' + str(self.filename)]
+            defaultPrompt = [ 'SequenceLogo saved as ' + str(self.popup_app.win.filename)]
         elif (self.status == 'logo request finished'):
             defaultPrompt = [ 'Received logo from server' ]
             self.status = [ 'waiting for selection' ]
