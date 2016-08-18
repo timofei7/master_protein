@@ -40,6 +40,7 @@ class SearchThread(ServerThread):
                 ("bbRMSD", "on"),
                 ("rmsdCut", str(rmsd))
                ]
+
         super(SearchThread, self).__init__(serverURL + '/api/search', data)
 
 
@@ -67,7 +68,7 @@ class SearchThread(ServerThread):
         numMatches = 0
         if 'results' in jsondata:
             if 'qSeq' in jsondata:
-                self.wizard.qSeqs[self.match_id] = str(jsondata['qSeq'])
+                self.wizard.popup_app.win.qSeqs[self.match_id] = str(jsondata['qSeq'])
             if 'matches' in jsondata:
                 for index, match in enumerate(jsondata['matches']):
                     # uncompress and decode matches
@@ -88,9 +89,9 @@ class SearchThread(ServerThread):
         # add current search to search history
         self.setReturn(numMatches)
         if (numMatches):
-                    self.cmd.get_wizard().add_new_search(self.match_id)
+                    self.cmd.get_wizard().popup_app.add_new_search(self.match_id)
 
     def on_finish(self, numMatches):
-        self.wizard.complete_search(numMatches)
+        self.wizard.popup_app.complete_search(numMatches)
 
     # -------- End of overridden functions from base class --------------- #

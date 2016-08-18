@@ -4,7 +4,8 @@ authors: Ben Scammell and Nick Fiacco
 import struct
 import Tkinter as tk
 from constants import *
-#from logo_thread import *
+from search_thread import *
+from logo_thread import *
 from server_thread import *
 from pymol import cmd
 import math
@@ -31,6 +32,23 @@ class WindowApp():
         self.win.protocol("WM_DELETE_WINDOW", self.callback)
         self.win.title('MASTER Search')
         
+        self.win.serverURL = "http://ararat.cs.dartmouth.edu:5001"
+        self.win.jobIDs = {}
+        self.win.qSeqs = {}
+
+        self.win.searchThread = None
+        self.win.logoThread = None
+
+        self.win.searches = []
+        self.win.search = None
+        self.win.full_match = None
+        self.win.datab = None
+
+        self.win.done_adding = False
+        self.win.logo_flag = None
+        self.win.filename = None
+        self.win.res_info = None
+
         # Instance variables to be used in logos
         self.win.start = None
         self.win.textview = None
@@ -106,10 +124,10 @@ class WindowApp():
     # Remake ID menu after it been appended to searches
     def make_ids(self):
         
-        if cmd.get_wizard().done_adding == True:
+        if self.win.done_adding == True:
 
             # Set search options and current search
-            searches = cmd.get_wizard().searches[0:]
+            searches = self.win.searches[0:]
             searches.insert(0, 'Search IDs: ')
             self.win.search_id.set(searches[0])
             
@@ -117,25 +135,68 @@ class WindowApp():
             search_id = tk.OptionMenu(self.win, self.win.search_id, *searches).grid(row=10, column=0, rowspan=2, sticky=N+E+S+W)
             
             # Reset flag
-            cmd.get_wizard().done_adding = False
+            self.win.done_adding = False
 
     
     # Function to set flag and ID number
     def set_and_display(self, flag, id):
 
         # Set search
-        cmd.get_wizard().set_search(int(id[-1])-1)
+        self.set_search(int(id[-1])-1)
 
         # Show logo
-        cmd.get_wizard().launch_logo_search(flag)
+        print "launching"
+        self.launch_logo_search(flag)
 
+    def set_search(self, i):
+        
+        self.win.search = self.win.searches[int(i)]
+        cmd.refresh_wizard()
+
+    def launch_logo_search(self, flag):
+        """
+        launches the show logo operation in the separate thread
+        does some basic checking and gets selection
+        """
+
+        if self.win.search is None:
+            print 'please select target search'
+            return
+        
+        else:
+            
+            cmd.get_wizard().status = 'logo request launched'
+            cmd.refresh_wizard()
+            
+            self.stop_logo()
+            self.win.logoThread = LogoThread(
+                self.win.jobIDs[self.win.search],
+                int(flag),
+                self.win.serverURL,
+                cmd)
+            self.win.logoThread.start()
+            self.win.logoThread.join()
+           
+            cmd.get_wizard().status = 'logo request finished'
+            cmd.refresh_wizard()
+
+            query = self.win.jobIDs[self.win.search]
+            residues = self.win.qSeqs[self.win.search]
+            cmd.get_wizard().makeLogo = 0
+            
+            self.display_menu_logo(cmd.get_wizard().app, query, residues, self.win.rmsd.get(), flag, cmd.get_wizard())
+
+    def stop_logo(self, message=''):
+        if self.win.logoThread:
+            self.win.logoThread.stop(message)
 
     # Function to set all values for searching
     def set_and_search(self):
 
         # Set RMSD cutoff
         if self.is_num(self.win.rmsd.get()):
-            cmd.get_wizard().set_rmsd(float(self.win.rmsd.get()))
+        #cmd.get_wizard().set_rmsd(float(self.win.rmsd.get()))
+            self.win.rmsd.set(float(self.win.rmsd.get()))
         else:
             cmd.get_wizard().status = 'rmsd not number'
             cmd.refresh_wizard()
@@ -143,27 +204,96 @@ class WindowApp():
 
         # Set number of structures
         if self.is_num(self.win.num_structs.get()):
-            cmd.get_wizard().set_num_structures(self.win.num_structs.get())
+        #cmd.get_wizard().set_num_structures(float(self.win.num_structs.get()))
+            self.win.num_structs.set(float(self.win.num_structs.get()))
         else:
             cmd.get_wizard().status = 'num matches not number'
             cmd.refresh_wizard()
             return
 
         # Set Database
-        if self.win.db == "Test DB":
-            cmd.get_wizard().set_database("Test")
-        elif self.win.db == "Full DB":
-            cmd.get_wizard().set_database("Full")
+        if self.win.db.get() == "Test DB":
+            self.win.datab = DATABASE_TEST
+        elif self.win.db.get() == "Full DB":
+            self.win.datab = DATABASE_FULL
 
         # Set Full matches
-        if self.win.fm == "Region":
-            cmd.get_wizard().set_full_matches(False)
-        elif self.win.fm == "Full":
-            cmd.get_wizard().set_full_matches(True)
+        if self.win.fm.get() == "Region":
+            self.win.full_match = False
+        elif self.win.fm.get() == "Full":
+            self.win.full_match = True
 
         # Launch the search
-        cmd.get_wizard().launch_search()
+        self.launch_search()
+            
+    def launch_search(self):
+        """
+        launches the search in the separate thread
+        does some basic checking and gets selection
+        """
+        # boolean used for check on proper protein object selection
+        run = True
 
+        # gets the active selections from pymol
+        active_selections = cmd.get_names('selections', 1)
+        protein_selections = cmd.get_object_list('all')
+
+        if len(active_selections) == 0:
+            self.set_status('no selection')
+
+        # Error handling for multiple objects selected (disallowed)
+        if len(protein_selections) > 1:
+            run = False
+            self.set_status('multiple objects')
+
+        else:
+            selection = active_selections[0]
+            print "The active selections are " + str(selection)
+            pdbstr = cmd.get_pdbstr(selection)
+            print 'pdbstr is', pdbstr
+            self.stop_search()
+
+            self.searchThread = SearchThread(self, self.rmsd_cutoff,
+                                self.number_of_structures, self.full_match,
+                                self.database, pdbstr, self.serverURL, self.cmd, self.jobIDs)
+            self.searchThread.start()
+            self.set_status('search launched')
+            self.searchProgress = 0
+
+        # prevent unwanted reset in the case of multiple protein object selections
+        if(run):
+            self.cmd.refresh_wizard()
+
+            
+    def stop_search(self, message=''):
+        if self.win.searchThread:
+            self.win.searchThread.stop(message)
+
+    def complete_search(self, numMatches = -1):
+        """
+        callback called by SearchThread when the
+        search is complete
+        """
+
+        if (numMatches >= 0):
+            print "number of matches = ", numMatches
+            cmd.get_wizard().set_status('search complete', 'Search complete, %d matches' % numMatches)
+                #            self.set_status('search complete')
+        else:
+            cmd.get_wizard().set_status('search complete')
+        cmd.get_wizard().makeLogo = 1; # add search to menu
+                                     
+    def add_new_search(self, search_id):
+        '''
+        add current search to search history after it finishes
+        '''
+        # print 'add new search'
+        self.win.searches.append(search_id)
+        cmd.refresh_wizard()
+
+        # Trip flag for window
+        self.win.done_adding = True
+        cmd.get_wizard().makeLogo = 1
     def saveFile(self):
 
         extensions = [('PDF', '.pdf'), ('EPS', '.eps'), ('GIF', '.gif'), ('PNG', '.png')]
@@ -178,7 +308,7 @@ class WindowApp():
         # get the EPS file from the server and write it
         self.getLogoFile(f.name)
         
-        cmd.get_wizard().filename = f.name
+        self.win.filename = f.name
         
         f.close()
         cmd.get_wizard().status = 'SequenceLogo saved'
@@ -192,16 +322,16 @@ class WindowApp():
             
         cmd.get_wizard().status = 'logo file request launched'
         cmd.refresh_wizard()
-        logoThread = LogoThread(
-            cmd.get_wizard().jobIDs[cmd.get_wizard().search],
-            int(cmd.get_wizard().logo_flag),
-            cmd.get_wizard().serverURL,
+        self.win.logoThread = LogoThread(
+            self.win.jobIDs[self.win.search],
+            int(self.win.logo_flag),
+            self.win.serverURL,
             cmd.get_wizard().cmd,
             filepath,
             ext)
             
-        logoThread.start()
-        logoThread.join()
+        self.win.logoThread.start()
+        self.win.logoThread.join()
 
         cmd.get_wizard().status = 'vector graphic received'
         cmd.refresh_wizard()
@@ -223,7 +353,7 @@ class WindowApp():
             logo_filepath = LOGO_CACHE + str(query)+"f.gif"
         
         # Set permanent flag (1/2)
-        cmd.get_wizard().logo_flag = flag
+        self.win.logo_flag = flag
         
         # Get the coordinates of the image
         self.win.coords = self.get_image_size(logo_filepath)
@@ -305,7 +435,7 @@ class WindowApp():
     def residue_select(self, i):
         
         # Show selection message
-        cmd.get_wizard().res_info = 'click search chain '+self.win.residue_list[i][1]+' num '+self.win.residue_list[i][2]
+        self.win.res_info = 'click search chain '+self.win.residue_list[i][1]+' num '+self.win.residue_list[i][2]
         cmd.get_wizard().status = 'residue selected'
         cmd.refresh_wizard()
         
