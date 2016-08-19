@@ -5,6 +5,7 @@ import struct
 import Tkinter as tk
 from constants import *
 from search_thread import *
+from redesign_thread import *
 from logo_thread import *
 from server_thread import *
 from pymol import cmd
@@ -69,11 +70,11 @@ class RedesignApp():
 
         # TODO: determine effect of commenting out gui code below for new redesign popup
 
-        # Make a label for RMSD and entry box
-        rmsd_label = tk.Label(self.win, text = "RMSD cut", width=1).grid(rowspan=2, sticky=N+E+S+W)
-        self.win.rmsd = tk.StringVar(self.win)
-        self.win.rmsd.set('0.5')
-        rmsd_entry = tk.Entry(self.win, textvariable = self.win.rmsd, width=2).grid(row=0, column=1, rowspan=2, sticky=N+E+S+W)
+        # # Make a label for RMSD and entry box
+        # rmsd_label = tk.Label(self.win, text = "RMSD cut", width=1).grid(rowspan=2, sticky=N+E+S+W)
+        # self.win.rmsd = tk.StringVar(self.win)
+        # self.win.rmsd.set('0.5')
+        # rmsd_entry = tk.Entry(self.win, textvariable = self.win.rmsd, width=2).grid(row=0, column=1, rowspan=2, sticky=N+E+S+W)
 
         # # Make a label for the Number of Structures value
         # num_structs_label = tk.Label(self.win, text = "# matches", width=1).grid(row=2, column=0, rowspan=2, sticky=N+E+S+W)
@@ -95,7 +96,7 @@ class RedesignApp():
         # match_select = tk.OptionMenu(self.win, self.win.fm, "Region", "Full").grid(row=6, column=1, rowspan=2, sticky=N+E+S+W)
 
         # Add a search button that calls search when clicked
-        search_button = tk.Button(self.win, text="Redesign", command=lambda: self.launch_redesign()).grid(row=1, column=5, rowspan=100, columnspan=100, sticky=N+E+S+W)
+        search_button = tk.Button(self.win, text="Redesign", command=lambda: self.launch_redesign(), width=50, height=50).grid(row=1, column=5, sticky=N+E+S+W)
 
         # # Pick search
         # self.win.search_id = tk.StringVar(self.win)
@@ -125,7 +126,49 @@ class RedesignApp():
 
 
     def launch_redesign(self):
-        print "redesign success!"
+        """
+        launches the search in the separate thread
+        does some basic checking and gets selection
+        """
+        # boolean used for check on proper protein object selection
+        run = True
+
+        # gets the active selections from pymol
+        active_selections = cmd.get_names('selections', 1)
+        protein_selections = cmd.get_object_list('all')
+
+        if len(active_selections) == 0:
+            self.set_status('no selection')
+
+        # Error handling for multiple objects selected (disallowed)
+        if len(protein_selections) > 1:
+            run = False
+            self.set_status('multiple objects')
+
+        else:
+            active_selection = active_selections[0]
+            protein_selection = protein_selections[0]
+            print "The active selections are " + str(active_selection)
+            pdbstr = cmd.get_pdbstr(active_selection)
+            protstr = cmd.get_pdbstr(protein_selection)
+            print 'pdbstr is', pdbstr
+            self.stop_redesign()
+
+            self.searchThread = RedesignThread(self, pdbstr, protstr,
+                                               self.serverURL, self.cmd,
+                                               self.jobIDs)
+            self.searchThread.start()
+            self.set_status('search launched')
+            self.searchProgress = 0
+
+        # prevent unwanted reset in the case of multiple protein object selections
+        if(run):
+            self.cmd.refresh_wizard()
+
+
+    def stop_redesign(self, message=''):
+        if self.win.searchThread:
+            self.win.searchThread.stop(message)
 
     def callback(self):
 
@@ -268,9 +311,6 @@ class RedesignApp():
     #
     #     cmd.refresh_wizard()
     #
-    # def stop_search(self, message=''):
-    #     if self.win.searchThread:
-    #         self.win.searchThread.stop(message)
     #
     # def complete_search(self, numMatches = -1):
     #     """

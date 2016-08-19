@@ -28,7 +28,7 @@ class SearchThread(ServerThread):
     def __init__(self, wiz, rmsd, num_struct, full_matches, database, pdbstrs, serverURL, thecmd, dictionary):
 
         self.dictionary = dictionary
-        self.wizard         = wiz
+        self.wizard = wiz
         self.cmd = thecmd
         self.match_id = self.new_group_name()
 
