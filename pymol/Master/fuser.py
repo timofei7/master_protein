@@ -31,7 +31,13 @@ class FuserApp():
         self.win.title('Fuser')
         self.lock_one = False
         self.lock_two = False
-        
+        self.strand_one_selection = None
+        self.strand_two_selection = None
+        self.res_list_one = []
+        self.res_list_two = []
+        self.res_string_one = ''
+        self.res_string_two = ''
+        self.n_c = 1
         
         # Make the residue selection buttons
         self.strand_title = tk.Label(self.win, text = "Residue selection").grid(columnspan=2, sticky=N+E+S+W)
@@ -48,35 +54,41 @@ class FuserApp():
         
         # Blank space
         self.filler = tk.Label(self.win).grid(row=3, columnspan=2, sticky=N+E+S+W)
+        self.filler = tk.Label(self.win, text= "Join at: ").grid(row=4, columnspan=2, sticky=N+E+S+W)
+        
+        self.win.one_n = tk.Radiobutton(self.win, text="Strand1's N-terminal and Strand2's C-terminal", variable=self.n_c, value=1).grid(row=5, columnspan=2, sticky=N+E+S+W)
+        self.win.one_c = tk.Radiobutton(self.win, text="Strand1's C-terminal and Strand2's N-terminal", variable=self.n_c, value=2).grid(row=6, columnspan=2, sticky=N+E+S+W)
+        
+        self.filler = tk.Label(self.win).grid(row=7, columnspan=2, sticky=N+E+S+W)
         
         # Make the range of lengths labels
-        self.range_title = tk.Label(self.win, text = "Length of fuse").grid(row=4, columnspan=2, sticky=N+E+S+W)
-        self.range_label = tk.Label(self.win, text="-Min-                             -Max-").grid(row = 5, columnspan=2, sticky=N+E+S+W)
+        self.range_title = tk.Label(self.win, text = "Length of fuse").grid(row=8, columnspan=2, sticky=N+E+S+W)
+        self.range_label = tk.Label(self.win, text="-Min-                             -Max-").grid(row = 9, columnspan=2, sticky=N+E+S+W)
         
         # Make the range of lengths entry boxes
         self.range_min = tk.StringVar(self.win)
         self.range_min.set('1')
-        self.min_entry = tk.Entry(self.win, textvariable=self.range_min).grid(row=6, sticky=N+E+S+W)
+        self.min_entry = tk.Entry(self.win, textvariable=self.range_min).grid(row=10, sticky=N+E+S+W)
         
         self.range_max = tk.StringVar(self.win)
         self.range_max.set('10')
-        self.max_entry = tk.Entry(self.win, textvariable=self.range_max).grid(row=6, column=1, sticky=N+E+S+W)
+        self.max_entry = tk.Entry(self.win, textvariable=self.range_max).grid(row=10, column=1, sticky=N+E+S+W)
         
         # Blank space
-        self.filler_two = tk.Label(self.win).grid(row=7, columnspan=2, sticky=N+E+S+W)
+        self.filler_two = tk.Label(self.win).grid(row=11, columnspan=2, sticky=N+E+S+W)
         
         # Make a label for RMSD and entry box
-        self.rmsd_label = tk.Label(self.win, text = "RMSD cut").grid(row=8, columnspan=2, sticky=N+E+S+W)
+        self.rmsd_label = tk.Label(self.win, text = "RMSD cut").grid(row=12, columnspan=2, sticky=N+E+S+W)
         self.rmsd = tk.StringVar(self.win)
         self.rmsd.set('0.5')
-        self.rmsd_entry = tk.Entry(self.win, textvariable = self.rmsd).grid(row=9, columnspan=2, sticky=N+E+S+W)
+        self.rmsd_entry = tk.Entry(self.win, textvariable = self.rmsd).grid(row=13, columnspan=2, sticky=N+E+S+W)
         
         # Blank space
-        self.filler_three = tk.Label(self.win).grid(row=10, columnspan=2, sticky=N+E+S+W)
+        self.filler_three = tk.Label(self.win).grid(row=14, columnspan=2, sticky=N+E+S+W)
         
         # Fuse label and Fuse command
-        self.fuse_label = tk.Label(self.win, text="Fuse").grid(row=11, columnspan=2, sticky=N+E+S+W)
-        self.fuse_button = tk.Button(self.win, text="--->").grid(row=12, columnspan=2, sticky=N+E+S+W)
+        self.fuse_label = tk.Label(self.win, text="Fuse").grid(row=15, columnspan=2, sticky=N+E+S+W)
+        self.fuse_button = tk.Button(self.win, text="--->").grid(row=16, columnspan=2, sticky=N+E+S+W)
     
     
     
@@ -84,14 +96,79 @@ class FuserApp():
     
     def so_lock_mech(self, bool):
         if bool == False:
-            self.so_lock.config(text="Locked")
+            
+            
+            active_selections = cmd.get_names('selections', 1)
+            selection = active_selections[0]
+            pdbstr = cmd.get_pdbstr(selection)
+            split_pdbstr = pdbstr.split()
+            
+            self.res_list_one = [-1]
+            
+            i = 5
+#            print split_pdbstr
+            self.res_string_one = ''
+            while i < len(split_pdbstr):
+                
+                if split_pdbstr[i] != self.res_list_one[-1]:
+                    self.res_list_one.append(split_pdbstr[i])
+                    
+                    self.res_string_one += str(self.find_aa(split_pdbstr[i-2]))
+                i += 12
+            
+            
+            self.res_list_one = self.res_list_one[1:]
+            for num in self.res_list_one:
+ 
+                if num in self.res_list_two:
+                    print 'residue selections must not overlap'
+                    break
+                elif num == self.res_list_one[-1] and num not in self.res_list_two:
+                    self.strand_one_selection = self.res_list_one
+                    print self.strand_one_selection
+                    self.so_lock.config(text=self.res_string_one)
+
+    
+
         else:
             self.so_lock.config(text="Unlocked")
         self.lock_one = not bool
     
     def st_lock_mech(self, bool):
         if bool == False:
-            self.st_lock.config(text="Locked")
+            
+            
+            active_selections = cmd.get_names('selections', 1)
+            selection = active_selections[0]
+            pdbstr = cmd.get_pdbstr(selection)
+            split_pdbstr = pdbstr.split()
+            
+            self.res_list_two = [-1]
+            
+            i = 5
+            self.res_string_two = ''
+            while i < len(split_pdbstr):
+                
+                if split_pdbstr[i] != self.res_list_two[-1]:
+                    self.res_list_two.append(split_pdbstr[i])
+                    
+                    self.res_string_two += str(self.find_aa(split_pdbstr[i-2]))
+
+                i += 12
+            
+            
+            self.res_list_two = self.res_list_two[1:]
+            
+            for num in self.res_list_two:
+                if num in self.res_list_one:
+                    print 'residue selections must not overlap'
+                    break
+                elif num == self.res_list_two[-1] and num not in self.res_list_one:
+                    self.strand_two_selection = self.res_list_two
+                    print self.strand_two_selection
+                    self.st_lock.config(text=self.res_string_two)
+
+    
         else:
             self.st_lock.config(text="Unlocked")
         self.lock_two = not bool
@@ -104,12 +181,90 @@ class FuserApp():
         self.so_lock.config(state="disabled")
         self.st_lock.config(state="normal")
     
-    
+    def find_aa(self, tc):
+        oc = None
+        if tc == 'ALA':
+            oc = 'A'
+        elif tc == 'ARG':
+            oc = 'R'
+        elif tc == 'ASN':
+            oc = 'N'
+        elif tc == 'ASP':
+            oc = 'D'
+        elif tc == 'ASX':
+            oc = 'B'
+        elif tc == 'CYS':
+            oc = 'C'
+        elif tc == 'GLU':
+            oc = 'E'
+        elif tc == 'GLN':
+            oc = 'Q'
+        elif tc == 'GLX':
+            oc = 'Z'
+        elif tc == 'GLY':
+            oc = 'G'
+        elif tc == 'HIS':
+            oc = 'H'
+        elif tc == 'ILE':
+            oc = 'I'
+        elif tc == 'LEU':
+            oc = 'L'
+        elif tc == 'LYS':
+            oc = 'K'
+        elif tc == 'MET':
+            oc = 'M'
+        elif tc == 'PHE':
+            oc = 'F'
+        elif tc == 'PRO':
+            oc = 'P'
+        elif tc == 'SER':
+            oc = 'S'
+        elif tc == 'THR':
+            oc = 'T'
+        elif tc == 'TRP':
+            oc = 'W'
+        elif tc == 'TYR':
+            oc = 'Y'
+        elif tc == 'VAL':
+            oc = 'V'
+        return oc
+            
     def callback(self):
-        
+        cmd.refresh_wizard()
         # Reset flag for making popup
         cmd.get_wizard().fuser_app = False
         self.win.destroy()
+
+
+    
+#    def launch_search(self):
+#        """
+#        launches the search in the separate thread
+#        does some basic checking and gets selection
+#        """
+#        
+#        # gets the active selections from pymol
+#        active_selections = cmd.get_names('selections', 1)
+#        if len(active_selections) == 0:
+#            cmd.get_wizard().set_status('no selection')
+#        else:
+#
+#            selection = active_selections[0]
+#            print "The active selections are " + str(selection)
+#            pdbstr = cmd.get_pdbstr(selection)
+#            print 'pdbstr is', pdbstr
+#            self.stop_search()
+#            
+#            print cmd.get_wizard(), self.win.rmsd.get(), self.win.num_structs.get(), self.win.full_match, self.win.datab, pdbstr, self.win.serverURL, cmd.get_wizard().cmd, self.win.jobIDs
+#
+#            self.win.searchThread = SearchThread(cmd.get_wizard(), self.win.rmsd.get(),
+#                                self.win.num_structs.get(), self.win.full_match,
+#                                self.win.datab, pdbstr, self.win.serverURL, cmd.get_wizard().cmd, self.win.jobIDs)
+#            self.win.searchThread.start()
+#            cmd.get_wizard().set_status('search launched')
+#            cmd.get_wizard().searchProgress = 0
+
+
 """
     # Instance variables to be used in logos
     self.win.start = None

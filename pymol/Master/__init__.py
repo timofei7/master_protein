@@ -14,6 +14,7 @@ from constants import *
 from server_thread import *
 from search_thread import *
 from logo_thread import *
+from fuser import *
 
 class MasterSearch(Wizard):
     """
@@ -35,6 +36,9 @@ class MasterSearch(Wizard):
 
         self.popup_app = None
         self.live_app = False
+        
+        self.fuser_app = None
+        self.live_fuser = False
 
         self.update()
 
@@ -47,12 +51,23 @@ class MasterSearch(Wizard):
         if self.makeLogo == 3 and self.live_app != True:
             self.popup_app = WindowApp(self.app)
             self.live_app = True
+        if self.makeLogo == 6 and self.live_fuser != True:
+            self.fuser_app = FuserApp(self.app)
+            self.fuser_app = True
+        
         elif self.makeLogo == 1 and self.live_app == True:
             self.popup_app.make_ids()  # search just completed, add item to dropdown list
         elif self.makeLogo == 2 and self.live_app == True:
             if (self.popup_app is not None):
                 self.popup_app.win.destroy()  # exit button pressed, close window
                 self.live_app = False
+    
+        elif self.makeLogo == 4:
+            pass ##############
+        elif self.makeLogo == 5 and self.live_fuser == True:
+            if (self.fuser_app is not None):
+                self.fuser_app.win.destroy()
+                self.live_fuser = False
         
         self.makeLogo = 0
         self.app.root.after(100, self.update)
@@ -95,7 +110,7 @@ class MasterSearch(Wizard):
         """
 
         # num is the type of display  1 is title only, 2 is button, 3 is dropdown
-        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'], [2, 'Exit', 'cmd.get_wizard().logo_helper(2); cmd.set_wizard()']]
+        return [[2, 'Search Menu','cmd.get_wizard().logo_helper(3)'],[2, 'Fuser','cmd.get_wizard().logo_helper(6)'], [2, 'Exit', 'cmd.get_wizard().logo_helper(2); cmd.set_wizard()']]
     
 
     def get_prompt(self):
