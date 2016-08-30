@@ -1,6 +1,6 @@
-use Config::GENERAL;
+use GENERAL;
 use Getopt::Long;
-use Bio::PDB;
+use PDB;
 
 # process command line arguments
 my $usage = GENERAL::usage("Stitches a given fragment to an existing structure, using specified fixed anchors on the fragment and the structure.",

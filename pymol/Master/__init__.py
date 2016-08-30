@@ -57,6 +57,10 @@ class MasterSearch(Wizard):
         
         elif self.makeLogo == 1 and self.live_app == True:
             self.popup_app.make_ids()  # search just completed, add item to dropdown list
+        
+        elif self.makeLogo == 7 and self.live_fuser == True:
+            self.fuser_app.make_ids()  # fragment search just completed, add item to dropdown list
+        
         elif self.makeLogo == 2 and self.live_app == True:
             if (self.popup_app is not None):
                 self.popup_app.win.destroy()  # exit button pressed, close window
@@ -127,6 +131,8 @@ class MasterSearch(Wizard):
             defaultPrompt = [ 'Save Cancelled' ]
         elif (self.status == 'rmsd not number'):
             defaultPrompt = [ 'RMSD cutoff must be double' ]
+        elif (self.status == 'range input not number'):
+            defaultPrompt = [ 'Range input must be integer' ]
         elif (self.status == 'num matches not number'):
             defaultPrompt = [ 'matches must be integer' ]
         elif (self.status == 'residue selected'):

@@ -244,7 +244,7 @@ class WindowApp():
             print 'pdbstr is', pdbstr
             self.stop_search()
             
-            print cmd.get_wizard(), self.win.rmsd.get(), self.win.num_structs.get(), self.win.full_match, self.win.datab, pdbstr, self.win.serverURL, cmd.get_wizard().cmd, self.win.jobIDs
+#            print cmd.get_wizard(), self.win.rmsd.get(), self.win.num_structs.get(), self.win.full_match, self.win.datab, pdbstr, self.win.serverURL, cmd.get_wizard().cmd, self.win.jobIDs
 
             self.win.searchThread = SearchThread(cmd.get_wizard(), self.win.rmsd.get(),
                                 self.win.num_structs.get(), self.win.full_match,
