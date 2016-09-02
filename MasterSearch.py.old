@@ -2,7 +2,6 @@
 """
 the main master search functionality
 author:   Tim Tregubov, 12/2014
-author:   Gevorg Grigoryan, 08/2016
 """
 
 import os
@@ -29,42 +28,37 @@ defaults = {
 }
 
 
-class MasterSearch(ServerTask):
+class MasterSearch(object):
     """
-    class that handles MASTER search requests
+    main class
+    uses an rq redis worker to submit a background task
+    to do the actual search
     """
 
-    def process(self, request):
+    app = None
+    db_size = 0
+
+    def __init__(self, app):
+        """
+        sets up some initial parameters and a redis queue and connection
+        """
+
+        self.db_size = sum(1 for line in open(app.config['TARGET_LIST_PATH']) if line.rstrip())
+        self.app = app
+        self.redis_conn = Redis()
+        self.rq = Queue(connection=self.redis_conn)
+        print('init with db size: ' + str(self.db_size))
+
+    def process(self, query_file, database, arguments):
         """
         process the query
         """
 
-        # --- do some error checking
-        sanitized = Checks.sanitize_args(request.form)
-
-        # check args
-        (is_allowed, not_allowed_list) = Checks.allowed_args(request.form)
-        if not is_allowed:
-            return None, 'bad parameters: ' + ', '.join(not_allowed_list)
-
-        # check query file
-        if len(request.files) == 1 and 'query' in request.files:
-            query_file = request.files['query']
-            database = str(sanitized['database'])
-            if Checks.allowed_file(query_file.filename):
-                print("found query_file: " + str(query_file))
-            else:
-                return None, 'bad query file!'
-        else:
-            return None, 'no query file!'
-
-        # start processing the search query
         error = None
         search_job = None
-        self.tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])
+        tempdir = tempfile.mkdtemp(dir=self.app.config['PROCESSING_PATH'])
         query_filepath = os.path.join(tempdir, secure_filename(query_file.filename))
         sequence = ''
-        self.progressfile = os.path.join(self.tempdir, 'progress')
         try:
             # save file
             query_file.save(query_filepath)
@@ -73,45 +67,12 @@ class MasterSearch(ServerTask):
             sequence = self.sequenceFromPDB(query_filepath)
         except Exception as e:
             print("processing failed: ", e)
-            return None, str(e)
+            error = str(e)
 
         # cleanup all files
         # shutil.rmtree(tempdir, ignore_errors=True)
         # TODO: need to clean up the above somewhere later
-        return [('job', search_job), ('tempdir', tempdir), ('sequence', sequence)], ''
-
-    def progress(self):
-        while True:
-            time.sleep(1)
-            if search_job.is_failed:
-                yield json.dumps({'error': 'failed'})
-            elif search_job.get_status() != 'finished':  # keep sending progress update
-                try:
-                    yield json.dumps({'progress': open(progressfile, 'r').readline()})
-                except Exception as e:
-                    yield json.dumps({'error': e.message})
-
-            # finished finding matches, send the fileid to the client
-            else:
-                if re.search('ERROR', search_job.return_value):
-                    yield json.dumps({'error': search_job.return_value.replace("ERROR:", "")})
-
-                matches = []
-                structdir = os.path.join(tempdir, "struct")
-                for f in os.listdir(structdir):
-                    if f.endswith(".pdb"):
-                        filepath = os.path.join(structdir, f)
-                        str_file = str(open(filepath).read())
-                        compressed_file = zlib.compress(str_file, 5)
-                        encoded_file = base64.standard_b64encode(compressed_file)
-                        matches.append(encoded_file)
-                yield json.dumps({'results': search_job.result,
-                                  'tempdir': tempdir,
-                                  'message': 'will be available for 24 hours',
-                                  'matches': matches,
-                                  'qSeq': qSeq})
-                # TODO: implement cleaning up files
-                break
+        return search_job, tempdir, sequence, error
 
     def sequenceFromPDB(self, pdbfilepath):
         """

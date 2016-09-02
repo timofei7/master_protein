@@ -38,11 +38,67 @@ def hello():
 # api route for submitting a search
 @app.route("/api/search", methods=['POST', 'OPTIONS'])
 def search():
+
+    sanitized = Checks.sanitize_args(request.form)
+
+    # check args
+    (is_allowed, not_allowed_list) = Checks.allowed_args(request.form)
+    if not is_allowed:
+        return jsonify({'error': 'bad parameters: ' + ', '.join(not_allowed_list)})
+
+    # check query file
+    if len(request.files) == 1 and 'query' in request.files:
+        query_file = request.files['query']
+        database = str(sanitized['database'])
+        if Checks.allowed_file(query_file.filename):
+            print("found query_file: " + str(query_file))
+        else:
+            return jsonify({'error': 'bad query file!'}), 201
+    else:
+        return jsonify({'error': 'no query file!'}), 201
+
     # start processing the query and give us some progress
-    handle, error = masterSearch.process(request)
+    search_job, tempdir, qSeq, error = masterSearch.process(query_file, database, sanitized)
     if error:
         return jsonify({'error': error}), 201
-    return Response(masterSearch.progress(), mimetype='application/json')
+
+    progressfile = os.path.join(tempdir, 'progress')
+
+    # generator to provide updates and status to client
+    def generate():
+        while True:
+            time.sleep(1)
+            if search_job.is_failed:
+                yield json.dumps({'error': 'failed'})
+            elif search_job.get_status() != 'finished':  # keep sending progress update
+                try:
+                    yield json.dumps({'progress': open(progressfile, 'r').readline()})
+                except Exception as e:
+                    yield json.dumps({'error': e.message})
+
+            # finished finding matches, send the fileid to the client
+            else:
+                if re.search('ERROR', search_job.return_value):
+                    yield json.dumps({'error': search_job.return_value.replace("ERROR:", "")})
+
+                matches = []
+                structdir = os.path.join(tempdir, "struct")
+                for f in os.listdir(structdir):
+                    if f.endswith(".pdb"):
+                        filepath = os.path.join(structdir, f)
+                        str_file = str(open(filepath).read())
+                        compressed_file = zlib.compress(str_file, 5)
+                        encoded_file = base64.standard_b64encode(compressed_file)
+                        matches.append(encoded_file)
+                yield json.dumps({'results': search_job.result,
+                                  'tempdir': tempdir,
+                                  'message': 'will be available for 24 hours',
+                                  'matches': matches,
+                                  'qSeq': qSeq})
+                # TODO: implement cleaning up files
+                break
+
+    return Response(generate(),  mimetype='application/json')
 
 # url to fetch results
 @app.route("/api/search/<filename>", methods=['GET'])
