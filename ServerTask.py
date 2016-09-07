@@ -62,11 +62,11 @@ class ServerTask(object):
         """
 	return True
 
-    def enqueue(self):
+    def enqueue(self, inputs):
         """
         schedule the job
         """
-        job = self.rq.enqueue_call(self.do, args = self.inputs, timeout = self.maxTime)
+        job = self.rq.enqueue_call(self.do, args = inputs, timeout = self.maxTime)
         return job
 
 if __name__ == "__main__":
