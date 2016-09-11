@@ -39,6 +39,7 @@ def hello():
 @app.route("/api/search", methods=['POST', 'OPTIONS'])
 def search():
     # start processing the query and give us some progress
+    return jsonify({'error': 'bad parameters!!!'})
     handle, error = masterSearch.process(request)
     if error:
         return jsonify({'error': error}), 201

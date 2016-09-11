@@ -14,6 +14,7 @@ from redis import Redis
 import Tasks
 import re
 import sys
+from ServerTask import ServerTask
 
 
 class MasterSearch(ServerTask):

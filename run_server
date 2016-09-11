@@ -1,14 +1,11 @@
 #!/bin/bash
 
+x=`whoami`
 DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 mkdir -p processing 2>&1 >/dev/null
 
 $DIR/kill_server
-redis-server --daemonize yes --pidfile /tmp/redis.pid --logfile /tmp/redis.log
-rqworker --pid /tmp/rqworker1.pid &
-rqworker --pid /tmp/rqworker2.pid &
-rqworker --pid /tmp/rqworker3.pid &
-rqworker --pid /tmp/rqworker4.pid &
-rqworker --pid /tmp/rqworker5.pid &
-rqworker --pid /tmp/rqworker6.pid &
-gunicorn --pid /tmp/gunicorn.pid --access-logfile /tmp/gunicorn.log --daemon -w 6 --graceful-timeout 1200 --timeout 1200 -b 0.0.0.0:5001 MasterApp:app
+redis-server --daemonize yes --pidfile /tmp/redis.$x.pid --logfile /tmp/redis.$x.log
+for i in {1..6}; do
+  rqworker --pid /tmp/rqworker.$x.$i.pid &
+done
