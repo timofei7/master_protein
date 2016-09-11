@@ -62,7 +62,7 @@ class SearchThread(ServerThread):
         self.wizard.set_searchProgress(float(progs))
 
     def error_handler(self, mess):
-        self.wizard.set_status('', 'Error: ' + mess)
+        self.wizard.set_status('', 'Error: %s' % mess)
 
     def results_handler(self, jsondata):
         numMatches = 0

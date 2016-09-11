@@ -52,8 +52,9 @@ class ServerThread(threading.Thread):
                     progs = jsondata['progress'].strip()
                     self.progress_handler(progs)
             elif 'error' in jsondata:
-                self.error_handler(jsondata['error'].strip())
-                self.error = jsondata['error']
+                err = str(jsondata['error'])
+                self.error_handler(err)
+                self.error = err
             else:
                 self.databuffer.write(streamdata.strip())
                 # append to databuffer cause sometimes packets for results span multiple calls
