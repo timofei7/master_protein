@@ -41,7 +41,7 @@ class ServerTask(object):
         and parsing, and prepares all needed information for function
         do in self.inputs variable
         """
-	handle = 1
+        handle = 1
         error = False
 
         return handle, error

@@ -38,7 +38,6 @@ def hello():
 # api route for submitting a search
 @app.route("/api/search", methods=['POST', 'OPTIONS'])
 def search():
-    Util.logMessage(os.path.join(app.config['LOG_PATH'], 'main.log'), 'received search request')
     # start processing the query and give us some progress
     handle, error = masterSearch.process(request)
     if error:

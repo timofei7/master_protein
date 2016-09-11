@@ -98,7 +98,7 @@ class MasterSearch(ServerTask):
                 yield json.dumps({'error': 'failed'})
             elif self.job.get_status() != 'finished':  # keep sending progress update
                 try:
-                    yield json.dumps({'progress': open(progressfile, 'r').readline()})
+                    yield json.dumps({'progress': open(self.progressfile, 'r').readline()})
                 except Exception as e:
                     yield json.dumps({'error': e.message})
 
@@ -116,14 +116,11 @@ class MasterSearch(ServerTask):
                         compressed_file = zlib.compress(str_file, 5)
                         encoded_file = base64.standard_b64encode(compressed_file)
                         matches.append(encoded_file)
-                """
                 yield json.dumps({'results': self.job.result,
                                   'tempdir': self.tempdir,
                                   'message': 'will be available for 24 hours',
                                   'matches': matches,
                                   'qSeq': self.qSeq})
-                """
-                yield json.dumps({'error': 'some error'})
                 # TODO: implement cleaning up files
                 break
 
