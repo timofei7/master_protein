@@ -52,7 +52,8 @@ class ServerThread(threading.Thread):
                     progs = jsondata['progress'].strip()
                     self.progress_handler(progs)
             elif 'error' in jsondata:
-                self.error_handler(jsondata['error'])
+                self.error_handler(jsondata['error'].strip())
+                self.error = jsondata['error']
             else:
                 self.databuffer.write(streamdata.strip())
                 # append to databuffer cause sometimes packets for results span multiple calls
@@ -76,7 +77,7 @@ class ServerThread(threading.Thread):
            This method should be overridden by the parent class if
            you want anything intelligent done with progress messages
         """
-        print "progress report: %s", mess
+        print "progress report: %s" % mess
         print "override this method to act upon this progress"
 
     def error_handler(self, mess):
@@ -84,7 +85,7 @@ class ServerThread(threading.Thread):
            This method should be overridden by the parent class if
            you want anything intelligent done with error messages
         """
-        print "error: %s", mess
+        print "error: %s" % mess
         print "override this method to act upon this error"
 
     def on_finish(self, returnObj):
@@ -145,9 +146,9 @@ class ServerThread(threading.Thread):
         except Exception as e:
             # check for self.error as that would contain certain types of errors that weren't exceptions
             if self.error:
-                print("Trouble posting request: " + self.error)
+                print("Trouble posting request: ", self.error)
             else:
-                print("Trouble posting request: " + e.message)
+                print("Trouble posting request: ", e.message)
                 print(traceback.format_exc())
 
         finally:

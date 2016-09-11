@@ -155,6 +155,7 @@ class MasterSearch(Wizard):
             self.prompt = defaultPrompt
         else:
             self.prompt = [self.statusPrompt]
+        print self.prompt
         return self.prompt
 
 '''

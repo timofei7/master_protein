@@ -11,18 +11,20 @@ import subprocess
 import sys
 
 
-def search(cmd, basedir, tempdir, db_size):
+def masterSearchTask(cmd, basedir, tempdir, db_size):
     """
     perform the search
     this is a long running process best called asynchronously via rq
+    this is a static function
     """
+
     progressfile_path = os.path.join(tempdir, 'progress')
     progressfile = open(progressfile_path, "w+")
     fileid = os.path.basename(os.path.normpath(tempdir)).strip()
 
     tardir = os.path.join(basedir, '../compressed/')
     if not os.path.exists(tardir):
-        os.makedirs(tardir)
+       os.makedirs(tardir)
     tarname = fileid+".tar.gz"
 
     process = subprocess.Popen(cmd,
@@ -58,7 +60,7 @@ def search(cmd, basedir, tempdir, db_size):
     # compress the resultsdir
     compress_cmd = ['/usr/bin/tar', '-cf', os.path.join(tardir, tarname), os.path.join(basedir, fileid)]
 
-#    compress_cmd = ['/usr/bin/tar', '-C', basedir, '-czf', os.path.join(basedir, tarname), fileid]
+#        compress_cmd = ['/usr/bin/tar', '-C', basedir, '-czf', os.path.join(basedir, tarname), fileid]
     compress_process = subprocess.Popen(compress_cmd,
                                         stdout=subprocess.PIPE,
                                         stderr=subprocess.PIPE,

@@ -11,10 +11,10 @@ from flask import Response
 import json
 import time
 from MasterSearch import *
-import zlib
 import base64
 import re
 import shlex
+import Util
 
 # set up the flask app
 app = Flask(__name__)
@@ -38,8 +38,8 @@ def hello():
 # api route for submitting a search
 @app.route("/api/search", methods=['POST', 'OPTIONS'])
 def search():
+    Util.logMessage(os.path.join(app.config['LOG_PATH'], 'main.log'), 'received search request')
     # start processing the query and give us some progress
-    return jsonify({'error': 'bad parameters!!!'})
     handle, error = masterSearch.process(request)
     if error:
         return jsonify({'error': error}), 201

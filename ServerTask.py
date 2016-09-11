@@ -13,7 +13,6 @@ import subprocess
 from werkzeug.utils import secure_filename
 from rq import Queue
 from redis import Redis
-import Tasks
 import re
 
 
@@ -52,21 +51,13 @@ class ServerTask(object):
         override this
         a generator for providing progress updates
         """
-	yield ''
+        yield ''
 
-    @staticmethod
-    def do(inp):
-        """
-        override this
-        a static method that actually performs the computation
-        """
-	return True
-
-    def enqueue(self, inputs):
+    def enqueue(self, func, inputs):
         """
         schedule the job
         """
-        job = self.rq.enqueue_call(self.do, args = inputs, timeout = self.maxTime)
+        job = self.rq.enqueue_call(func, args = inputs, timeout = self.maxTime)
         return job
 
 if __name__ == "__main__":
