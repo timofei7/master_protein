@@ -1,4 +1,0 @@
-#!/bin/bash
-
-x=`whoami`
-gunicorn --pid /tmp/gunicorn.$x.pid --access-logfile /tmp/gunicorn.$x.log --daemon -w 6 --graceful-timeout 1200 --timeout 1200 -b 0.0.0.0:5001 MasterApp:app
