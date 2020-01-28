@@ -1,5 +1,6 @@
 ![logo](static/images/MASTER_logo_notext.jpg)
-##this is a server component for MASTER##
+
+## this is a server component for MASTER
 Method of Accelerated Search for Tertiary Ensemble Representatives
 
 This has two components:
@@ -8,7 +9,7 @@ This has two components:
 master on a server.
    - a [PyMol](https://www.pymol.org/) Plugin that provides an interface for easily sending requests to the server search api.
 
-###prerequisites:###
+### prerequisites:
 on osx install:
 
   - install [homebrew](http://brew.sh) if you don't have it
@@ -26,7 +27,7 @@ on osx install:
   	- `http://127.0.0.1:5000/api/search` for local development
   	- or `http://ararat.cs.dartmouth.edu:5000/api/search` for hitting the "production" server. 
 
-###run it:###
+### run it:
 to run a local server simply do:
 
   - `./run_server` 
@@ -39,7 +40,7 @@ This will launch a server at `http://localhost:5000` which will serve up a basic
   
 To kill the server.
 
-###contribute to it:###
+### contribute to it:
   - `pymol/Master` contains the pymol plugin module
   - `testing/` contains some basic test scripts
   - `MasterApp.py` is the main [flask](http://flask.pocoo.org/) app with various worker classes in the same directory
@@ -47,7 +48,7 @@ To kill the server.
   - `MasterSearch` logic surrounding launching background jobs and constructing master queries
   - use github issues and pull requests [github page](https://github.com/timofei7/master_protein)
 
-###test scripts###
+### test scripts
 
 test files in: `testing`
 
